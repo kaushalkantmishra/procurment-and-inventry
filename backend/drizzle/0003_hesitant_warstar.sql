@@ -1,0 +1,1 @@
+ALTER TABLE "tbl_users" RENAME COLUMN "refersh_token" TO "refresh_token";

@@ -8,6 +8,41 @@
       "when": 1764318205615,
       "tag": "0000_flippant_puppet_master",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764583403152,
+      "tag": "0001_mysterious_sentinels",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764583528988,
+      "tag": "0002_giant_trish_tilby",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764592965646,
+      "tag": "0003_hesitant_warstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1764593540326,
+      "tag": "0004_warm_sasquatch",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1764593928595,
+      "tag": "0005_freezing_venus",
+      "breakpoints": true
     }
   ]
 }
