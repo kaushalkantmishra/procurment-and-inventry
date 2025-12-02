@@ -263,6 +263,19 @@ CREATE TABLE "tbl_warehouses" (
 	CONSTRAINT "tbl_warehouses_warehouse_code_unique" UNIQUE("warehouse_code")
 );
 --> statement-breakpoint
+CREATE TABLE "tbl_users" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"password" varchar(255) NOT NULL,
+	"role" text NOT NULL,
+	"refresh_token" varchar(1000),
+	"is_active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "tbl_users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
 ALTER TABLE "tbl_categories" ADD CONSTRAINT "tbl_categories_parent_category_id_tbl_categories_id_fk" FOREIGN KEY ("parent_category_id") REFERENCES "public"."tbl_categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_items" ADD CONSTRAINT "tbl_items_category_id_tbl_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."tbl_categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_items" ADD CONSTRAINT "tbl_items_unit_of_measure_tbl_units_unit_id_fk" FOREIGN KEY ("unit_of_measure") REFERENCES "public"."tbl_units"("unit_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { users } from "../db/schema/user.schema";
 import { db } from "../db";
-import jwt from "jsonwebtoken";
+import * as jwt from "jsonwebtoken";
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const { name, email, password, role } = req.body;
@@ -99,8 +99,8 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
 
   const token = jwt.sign(
     { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET || "fallback-secret",
-    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+    (process.env.JWT_SECRET || "fallback-secret") as jwt.Secret,
+    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } as jwt.SignOptions
   );
 
   const { password: _, ...userWithoutPassword } = user;
