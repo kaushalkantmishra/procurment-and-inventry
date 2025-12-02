@@ -59,7 +59,7 @@ export const createItem = async (req: Request, res: Response) => {
 export const getItemById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const result = await db.select().from(items).where(eq(items.itemId, Number(id)));
+        const result = await db.select().from(items).where(eq(items.id, Number(id)));
         if (result.length === 0) {
             return res.status(404).json({ error: 'Item not found' });
         }

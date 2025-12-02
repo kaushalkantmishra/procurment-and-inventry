@@ -1,17 +1,17 @@
 import { Request, Response } from 'express';
 import { db } from '../db';
-import { grnHeaders, grnDetails } from '../db/schema';
+import { tblGrnDetails, tblGrnHeaders } from '../db/schema';
 
 export const createGRN = async (req: Request, res: Response) => {
     try {
         const { details, ...grnData } = req.body;
 
         const newGRN = await db.transaction(async (tx) => {
-            const [grn] = await tx.insert(grnHeaders).values(grnData).returning();
+            const [grn] = await tx.insert(tblGrnHeaders).values(grnData).returning();
 
             if (details && details.length > 0) {
-                const detailsWithGrnId = details.map((detail: any) => ({ ...detail, grnId: grn.grnId }));
-                await tx.insert(grnDetails).values(detailsWithGrnId);
+                const detailsWithGrnId = details.map((detail: any) => ({ ...detail, grnId: grn.id }));
+                await tx.insert(tblGrnDetails).values(detailsWithGrnId);
             }
             return grn;
         });
@@ -25,7 +25,7 @@ export const createGRN = async (req: Request, res: Response) => {
 
 export const getAllGRNs = async (req: Request, res: Response) => {
     try {
-        const result = await db.query.grnHeaders.findMany({
+        const result = await db.query.tblGrnHeaders.findMany({
             with: {
                 details: true,
             }
