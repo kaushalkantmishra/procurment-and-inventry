@@ -9,7 +9,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "electron": "electron .",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\""
+    "backend": "cd ../backend && npm run dev",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
+    "app:dev": "concurrently \"npm run backend\" \"npm run dev\" \"npm run electron:dev\""
   },
   "author": "ProcureDesk Team",
   "license": "MIT",

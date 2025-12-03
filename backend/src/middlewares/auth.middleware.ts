@@ -5,14 +5,13 @@ import { eq } from "drizzle-orm";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-export const verifyJWT = asyncHandler(async (req, _, next) => {
+export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
     const token =
-      req.cookies?.accessToken ||
-      req.header("Authorization")?.replace("Bearer ", "");
+      req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "");
 
     if (!token) {
-      throw new ApiError(401, "Unauthorized request.");
+      return res.status(401).json(new ApiError(401, "Unauthorized request."));
     }
 
     // decode token
@@ -23,7 +22,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
     // decoded = { id, email, role, iat, exp }
     if (!decoded?.id) {
-      throw new ApiError(400, "Invalid token payload.");
+      return res.status(400).json(new ApiError(400, "Invalid token payload."));
     }
 
     // Fetch user using Drizzle
@@ -39,7 +38,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
       .limit(1);
 
     if (user.length === 0) {
-      throw new ApiError(401, "Invalid access token.");
+      return res.status(401).json(new ApiError(401, "Invalid access token."));
     }
 
     req.user = user[0];
@@ -53,6 +52,6 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
       message = error.message;
     }
 
-    throw new ApiError(401, message);
+    return res.status(401).json(new ApiError(401, message));
   }
 });
