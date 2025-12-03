@@ -10,7 +10,7 @@ import { db } from "../db";
 import * as jwt from "jsonwebtoken";
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, profile } = req.body;
 
   const missingFields: string[] = [];
 
@@ -55,6 +55,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
       email,
       password: hashedPassword,
       role,
+      profile,
     })
     .returning();
 
@@ -105,14 +106,16 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
 
   const { password: _, ...userWithoutPassword } = user;
 
+  const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict" as const,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+
   return res
     .status(200)
-    .cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict" as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    })
+    .cookie("token", token, options)
     .json(
       new ApiResponse(
         200,
@@ -122,4 +125,66 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
     );
 });
 
-export { registerUser, loginUser };
+// LOGOUT USER
+const logoutUser = asyncHandler(async (req: Request, res: Response) => {
+  const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict" as const,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+
+  // 2️⃣ Clear cookie
+  res.clearCookie("token", options);
+
+  // 3️⃣ Send response
+  return res.status(200).json(new ApiResponse(200, null, "Logout successful"));
+});
+
+//Change Password
+const changePassword = asyncHandler(async (req: Request, res: Response) => {
+  const { password, newPassword } = req.body;
+
+  if (!password || !newPassword) {
+    const missingFields = [];
+    if (!password) missingFields.push("password");
+    if (!newPassword) missingFields.push("newPassword");
+    return res
+      .status(400)
+      .json(new ApiError(400, `${missingFields.join(" and ")} is required`));
+  }
+
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(400).json(new ApiError(400, "Unauthorized request."));
+  }
+
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user) {
+    return res.status(401).json(new ApiError(401, "Unauthorized request."));
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return res.status(401).json(new ApiError(401, "Invalid old password"));
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  await db
+    .update(users)
+    .set({ password: hashedPassword })
+    .where(eq(users.id, user.id));
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Password changed successfully"));
+});
+
+export { registerUser, loginUser, logoutUser, changePassword };
