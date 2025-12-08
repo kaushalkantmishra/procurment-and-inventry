@@ -8,7 +8,9 @@ import { eq } from "drizzle-orm";
 import { users } from "../db/schema/user.schema";
 import { db } from "../db";
 import * as jwt from "jsonwebtoken";
+import { isValidEmail } from "../helper/checkValid";
 
+// REGISTER USER
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const { name, email, password, role, profile } = req.body;
 
@@ -19,6 +21,10 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
   if (!password) missingFields.push("password");
   if (!name) missingFields.push("name");
   if (!role) missingFields.push("role");
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json(new ApiError(400, "Invalid email format"));
+  }
 
   // If ANY field is missing → stop here
   if (missingFields.length > 0) {
@@ -90,12 +96,12 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
   const user = userResult[0];
 
   if (!user) {
-    return res.status(401).json(new ApiError(401, "Invalid email or password"));
+    return res.status(401).json(new ApiError(401, "Invalid Credentials"));
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    return res.status(401).json(new ApiError(401, "Invalid email or password"));
+    return res.status(401).json(new ApiError(401, "Invalid Credentials"));
   }
 
   const token = jwt.sign(
@@ -110,7 +116,7 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
     httpOnly: true,
     secure: true,
     sameSite: "strict" as const,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 1 * 24 * 60 * 60 * 1000,
   };
 
   return res
@@ -131,17 +137,15 @@ const logoutUser = asyncHandler(async (req: Request, res: Response) => {
     httpOnly: true,
     secure: true,
     sameSite: "strict" as const,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 1 * 24 * 60 * 60 * 1000,
   };
 
-  // 2️⃣ Clear cookie
   res.clearCookie("token", options);
 
-  // 3️⃣ Send response
   return res.status(200).json(new ApiResponse(200, null, "Logout successful"));
 });
 
-//Change Password
+// CHANGE PASSWORD
 const changePassword = asyncHandler(async (req: Request, res: Response) => {
   const { password, newPassword } = req.body;
 
@@ -187,4 +191,68 @@ const changePassword = asyncHandler(async (req: Request, res: Response) => {
     .json(new ApiResponse(200, null, "Password changed successfully"));
 });
 
-export { registerUser, loginUser, logoutUser, changePassword };
+// UPDATE PROFILE
+const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(400).json(new ApiError(400, "Unauthorized request."));
+  }
+
+  const { name, profile, email } = req.body;
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json(new ApiError(400, "Invalid email format"));
+  }
+
+  const updatedUser = await db
+    .update(users)
+    .set({ name, profile, email })
+    .where(eq(users.id, userId));
+
+  if (!updatedUser) {
+    return res.status(500).json(new ApiError(500, "Unable to update profile"));
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Profile updated successfully"));
+});
+
+// ADMIN ACTIVATE/DEACTIVATE USER - Optional Enhancement
+const activateOrDeactivateUser = asyncHandler(
+  async (req: Request, res: Response) => {
+    // only admin can activate/deactivate users
+    const userRole = req.user?.role;
+
+    if (userRole !== "admin") {
+      return res
+        .status(403)
+        .json(
+          new ApiError(403, "Forbidden: Only Admin can perform this action.")
+        );
+    }
+
+    const { userId, isActive } = req.body;
+    const user = await db
+      .update(users)
+      .set({ isActive })
+      .where(eq(users.id, userId));
+
+    if (!user) {
+      return res.status(500).json(new ApiError(500, "Unable to update user"));
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "User Status updated successfully!"));
+  }
+);
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  changePassword,
+  updateProfile,
+  activateOrDeactivateUser,
+};
