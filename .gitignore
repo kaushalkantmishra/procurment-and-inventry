@@ -1,9 +1,27 @@
-/backend/node_modules/
-/frontend/node_modules/
-dist
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
 
-# Ignore all .env files everywhere
+# Build outputs
+dist/
+dist-electron/
+release/
+*.log
 
+# Environment
 .env
-**/.env
-**/.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Electron
+out/
