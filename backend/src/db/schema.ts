@@ -81,9 +81,7 @@ export const tblItems = pgTable("tbl_items", {
   sku: varchar("sku", { length: 20 }).notNull().unique(),
   item_name: varchar("item_name", { length: 100 }).notNull(),
   category_id: integer("category_id").references(() => tblCategories.id),
-  unit_of_measure: varchar("unit_of_measure", { length: 20 }).references(
-    () => tblUnits.unit_id
-  ),
+  unit_of_measure: integer("unit_of_measure").references(() => tblUnits.id),
   unit_cost: decimal("unit_cost", { precision: 15, scale: 2 }).default("0"),
   selling_price: decimal("selling_price", { precision: 15, scale: 2 }).default(
     "0"
@@ -249,6 +247,9 @@ export const tblGrnHeaders = pgTable("tbl_grn_headers", {
   vehicle_reg_no: varchar("vehicle_reg_no", { length: 20 }),
   received_by_user: varchar("received_by_user", { length: 50 }),
   inspection_status: varchar("inspection_status", { length: 50 }),
+  warehouse_id: integer("warehouse_id")
+    .references(() => tblWarehouses.id)
+    .notNull(),
   remarks: text("remarks"),
   status: integer("status").default(1),
   created_at: timestamp("created_at").defaultNow().notNull(),
@@ -289,6 +290,10 @@ export const grnHeadersRelations = relations(
       fields: [tblGrnHeaders.po_id],
       references: [tblPurchaseOrders.id],
     }),
+    warehouse: one(tblWarehouses, {
+      fields: [tblGrnHeaders.warehouse_id],
+      references: [tblWarehouses.id],
+    }),
     details: many(tblGrnDetails),
   })
 );
@@ -309,9 +314,7 @@ export const tblReceiptHeaders = pgTable("tbl_receipt_headers", {
   id: serial("id").primaryKey(),
   receipt_number: varchar("receipt_number", { length: 50 }).notNull().unique(),
   transaction_date: timestamp("transaction_date").defaultNow(),
-  store_id: varchar("store_id", { length: 20 }).references(
-    () => tblWarehouses.warehouse_code
-  ),
+  store_id: integer("store_id").references(() => tblWarehouses.id),
   cashier_id: varchar("cashier_id", { length: 50 }),
   customer_id: varchar("customer_id", { length: 50 }),
   subtotal: decimal("subtotal", { precision: 15, scale: 2 }).default("0"),
@@ -379,7 +382,7 @@ export const receiptHeadersRelations = relations(
   ({ one, many }) => ({
     store: one(tblWarehouses, {
       fields: [tblReceiptHeaders.store_id],
-      references: [tblWarehouses.warehouse_code],
+      references: [tblWarehouses.id],
     }),
     lines: many(tblReceiptLines),
     payments: many(tblPayments),
@@ -448,6 +451,47 @@ export const inventoryTransactionsRelations = relations(
   ({ one }) => ({
     item: one(tblItems, {
       fields: [tblInventoryTransactions.item_id],
+      references: [tblItems.id],
+    }),
+  })
+);
+
+export const tblWarehouseStock = pgTable(
+  "tbl_warehouse_stock",
+  {
+    id: serial("id").primaryKey(),
+
+    warehouse_id: integer("warehouse_id")
+      .references(() => tblWarehouses.id)
+      .notNull(),
+
+    item_id: integer("item_id")
+      .references(() => tblItems.id)
+      .notNull(),
+
+    quantity_on_hand: integer("quantity_on_hand").default(0).notNull(),
+
+    status: integer("status").default(1),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+    updated_at: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    unique_stock: check(
+      "unique_warehouse_item",
+      sql`${table.warehouse_id} IS NOT NULL AND ${table.item_id} IS NOT NULL`
+    ),
+  })
+);
+
+export const warehouseStockRelations = relations(
+  tblWarehouseStock,
+  ({ one }) => ({
+    warehouse: one(tblWarehouses, {
+      fields: [tblWarehouseStock.warehouse_id],
+      references: [tblWarehouses.id],
+    }),
+    item: one(tblItems, {
+      fields: [tblWarehouseStock.item_id],
       references: [tblItems.id],
     }),
   })

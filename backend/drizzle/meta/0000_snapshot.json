@@ -1,5 +1,5 @@
 {
-  "id": "93c38b23-0df2-431e-a4a3-0a372124ce0e",
+  "id": "af37ae9c-09ca-42ab-a37c-b2c5730b650b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -140,7 +140,7 @@
         },
         "unit_of_measure": {
           "name": "unit_of_measure",
-          "type": "varchar(20)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -281,15 +281,15 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tbl_items_unit_of_measure_tbl_units_unit_id_fk": {
-          "name": "tbl_items_unit_of_measure_tbl_units_unit_id_fk",
+        "tbl_items_unit_of_measure_tbl_units_id_fk": {
+          "name": "tbl_items_unit_of_measure_tbl_units_id_fk",
           "tableFrom": "tbl_items",
           "tableTo": "tbl_units",
           "columnsFrom": [
             "unit_of_measure"
           ],
           "columnsTo": [
-            "unit_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -534,6 +534,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "warehouse_id": {
+          "name": "warehouse_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "remarks": {
           "name": "remarks",
           "type": "text",
@@ -583,6 +589,19 @@
           "tableTo": "tbl_purchase_orders",
           "columnsFrom": [
             "po_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tbl_grn_headers_warehouse_id_tbl_warehouses_id_fk": {
+          "name": "tbl_grn_headers_warehouse_id_tbl_warehouses_id_fk",
+          "tableFrom": "tbl_grn_headers",
+          "tableTo": "tbl_warehouses",
+          "columnsFrom": [
+            "warehouse_id"
           ],
           "columnsTo": [
             "id"
@@ -1289,7 +1308,7 @@
         },
         "store_id": {
           "name": "store_id",
-          "type": "varchar(20)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -1377,15 +1396,15 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "tbl_receipt_headers_store_id_tbl_warehouses_warehouse_code_fk": {
-          "name": "tbl_receipt_headers_store_id_tbl_warehouses_warehouse_code_fk",
+        "tbl_receipt_headers_store_id_tbl_warehouses_id_fk": {
+          "name": "tbl_receipt_headers_store_id_tbl_warehouses_id_fk",
           "tableFrom": "tbl_receipt_headers",
           "tableTo": "tbl_warehouses",
           "columnsFrom": [
             "store_id"
           ],
           "columnsTo": [
-            "warehouse_code"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -1736,6 +1755,97 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.tbl_warehouse_stock": {
+      "name": "tbl_warehouse_stock",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "warehouse_id": {
+          "name": "warehouse_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity_on_hand": {
+          "name": "quantity_on_hand",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "status": {
+          "name": "status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "tbl_warehouse_stock_warehouse_id_tbl_warehouses_id_fk": {
+          "name": "tbl_warehouse_stock_warehouse_id_tbl_warehouses_id_fk",
+          "tableFrom": "tbl_warehouse_stock",
+          "tableTo": "tbl_warehouses",
+          "columnsFrom": [
+            "warehouse_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tbl_warehouse_stock_item_id_tbl_items_id_fk": {
+          "name": "tbl_warehouse_stock_item_id_tbl_items_id_fk",
+          "tableFrom": "tbl_warehouse_stock",
+          "tableTo": "tbl_items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "unique_warehouse_item": {
+          "name": "unique_warehouse_item",
+          "value": "\"tbl_warehouse_stock\".\"warehouse_id\" IS NOT NULL AND \"tbl_warehouse_stock\".\"item_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.tbl_warehouses": {
       "name": "tbl_warehouses",
       "schema": "",
@@ -1863,6 +1973,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "profile": {
+          "name": "profile",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "password": {
           "name": "password",
           "type": "varchar(255)",
@@ -1875,8 +1991,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "refresh_token": {
-          "name": "refresh_token",
+        "token": {
+          "name": "token",
           "type": "varchar(1000)",
           "primaryKey": false,
           "notNull": false

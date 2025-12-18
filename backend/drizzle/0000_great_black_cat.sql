@@ -18,7 +18,7 @@ CREATE TABLE "tbl_items" (
 	"sku" varchar(20) NOT NULL,
 	"item_name" varchar(100) NOT NULL,
 	"category_id" integer,
-	"unit_of_measure" varchar(20),
+	"unit_of_measure" integer,
 	"unit_cost" numeric(15, 2) DEFAULT '0',
 	"selling_price" numeric(15, 2) DEFAULT '0',
 	"vendor_code" varchar(50),
@@ -71,6 +71,7 @@ CREATE TABLE "tbl_grn_headers" (
 	"vehicle_reg_no" varchar(20),
 	"received_by_user" varchar(50),
 	"inspection_status" varchar(50),
+	"warehouse_id" integer NOT NULL,
 	"remarks" text,
 	"status" integer DEFAULT 1,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -180,7 +181,7 @@ CREATE TABLE "tbl_receipt_headers" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"receipt_number" varchar(50) NOT NULL,
 	"transaction_date" timestamp DEFAULT now(),
-	"store_id" varchar(20),
+	"store_id" integer,
 	"cashier_id" varchar(50),
 	"customer_id" varchar(50),
 	"subtotal" numeric(15, 2) DEFAULT '0',
@@ -246,6 +247,17 @@ CREATE TABLE "tbl_vendors" (
 	CONSTRAINT "tbl_vendors_vendor_code_unique" UNIQUE("vendor_code")
 );
 --> statement-breakpoint
+CREATE TABLE "tbl_warehouse_stock" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"warehouse_id" integer NOT NULL,
+	"item_id" integer NOT NULL,
+	"quantity_on_hand" integer DEFAULT 0 NOT NULL,
+	"status" integer DEFAULT 1,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "unique_warehouse_item" CHECK ("tbl_warehouse_stock"."warehouse_id" IS NOT NULL AND "tbl_warehouse_stock"."item_id" IS NOT NULL)
+);
+--> statement-breakpoint
 CREATE TABLE "tbl_warehouses" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"warehouse_code" varchar(20) NOT NULL,
@@ -267,9 +279,10 @@ CREATE TABLE "tbl_users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"email" varchar(255) NOT NULL,
+	"profile" varchar(255),
 	"password" varchar(255) NOT NULL,
 	"role" text NOT NULL,
-	"refresh_token" varchar(1000),
+	"token" varchar(1000),
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
@@ -278,17 +291,20 @@ CREATE TABLE "tbl_users" (
 --> statement-breakpoint
 ALTER TABLE "tbl_categories" ADD CONSTRAINT "tbl_categories_parent_category_id_tbl_categories_id_fk" FOREIGN KEY ("parent_category_id") REFERENCES "public"."tbl_categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_items" ADD CONSTRAINT "tbl_items_category_id_tbl_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."tbl_categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "tbl_items" ADD CONSTRAINT "tbl_items_unit_of_measure_tbl_units_unit_id_fk" FOREIGN KEY ("unit_of_measure") REFERENCES "public"."tbl_units"("unit_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "tbl_items" ADD CONSTRAINT "tbl_items_unit_of_measure_tbl_units_id_fk" FOREIGN KEY ("unit_of_measure") REFERENCES "public"."tbl_units"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_grn_details" ADD CONSTRAINT "tbl_grn_details_grn_id_tbl_grn_headers_id_fk" FOREIGN KEY ("grn_id") REFERENCES "public"."tbl_grn_headers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_grn_details" ADD CONSTRAINT "tbl_grn_details_po_line_id_tbl_po_lines_id_fk" FOREIGN KEY ("po_line_id") REFERENCES "public"."tbl_po_lines"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_grn_details" ADD CONSTRAINT "tbl_grn_details_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_grn_headers" ADD CONSTRAINT "tbl_grn_headers_po_id_tbl_purchase_orders_id_fk" FOREIGN KEY ("po_id") REFERENCES "public"."tbl_purchase_orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "tbl_grn_headers" ADD CONSTRAINT "tbl_grn_headers_warehouse_id_tbl_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."tbl_warehouses"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_inventory_transactions" ADD CONSTRAINT "tbl_inventory_transactions_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_payments" ADD CONSTRAINT "tbl_payments_receipt_id_tbl_receipt_headers_id_fk" FOREIGN KEY ("receipt_id") REFERENCES "public"."tbl_receipt_headers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_po_distributions" ADD CONSTRAINT "tbl_po_distributions_po_line_id_tbl_po_lines_id_fk" FOREIGN KEY ("po_line_id") REFERENCES "public"."tbl_po_lines"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_po_lines" ADD CONSTRAINT "tbl_po_lines_po_id_tbl_purchase_orders_id_fk" FOREIGN KEY ("po_id") REFERENCES "public"."tbl_purchase_orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_po_lines" ADD CONSTRAINT "tbl_po_lines_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_purchase_requests" ADD CONSTRAINT "tbl_purchase_requests_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "tbl_receipt_headers" ADD CONSTRAINT "tbl_receipt_headers_store_id_tbl_warehouses_warehouse_code_fk" FOREIGN KEY ("store_id") REFERENCES "public"."tbl_warehouses"("warehouse_code") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "tbl_receipt_headers" ADD CONSTRAINT "tbl_receipt_headers_store_id_tbl_warehouses_id_fk" FOREIGN KEY ("store_id") REFERENCES "public"."tbl_warehouses"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_receipt_lines" ADD CONSTRAINT "tbl_receipt_lines_receipt_id_tbl_receipt_headers_id_fk" FOREIGN KEY ("receipt_id") REFERENCES "public"."tbl_receipt_headers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "tbl_receipt_lines" ADD CONSTRAINT "tbl_receipt_lines_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "tbl_receipt_lines" ADD CONSTRAINT "tbl_receipt_lines_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "tbl_warehouse_stock" ADD CONSTRAINT "tbl_warehouse_stock_warehouse_id_tbl_warehouses_id_fk" FOREIGN KEY ("warehouse_id") REFERENCES "public"."tbl_warehouses"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "tbl_warehouse_stock" ADD CONSTRAINT "tbl_warehouse_stock_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;

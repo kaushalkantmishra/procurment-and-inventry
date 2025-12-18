@@ -5,7 +5,7 @@ dotenv.config();
 
 export const config = {
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/procurement_db',
+    url: process.env.DATABASE_URL!
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'your-secret-key',

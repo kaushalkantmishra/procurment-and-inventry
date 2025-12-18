@@ -1,1 +1,0 @@
-ALTER TABLE "tbl_users" ADD COLUMN "profile" varchar(255);
