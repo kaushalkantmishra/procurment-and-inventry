@@ -25,6 +25,7 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new Error('Invalid credentials');
     }
+    
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },

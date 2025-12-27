@@ -105,7 +105,7 @@ export const Login: React.FC = () => {
 
         {/* Footer */}
         <p className="text-center text-white/80 mt-6 text-sm">
-          © 2024 ProcureDesk. All rights reserved.
+          © 2026 ProcureDesk. All rights reserved.
         </p>
       </div>
     </div>

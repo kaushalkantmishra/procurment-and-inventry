@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Procurement & Inventory Management Desktop App",
   "main": "main.js",
+  "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
