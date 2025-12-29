@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { useStore } from "./store/useStore";
+import { useAuthStore } from "./store/authStore";
 import { Layout } from "./components/layout/Layout";
+import ModuleDashboard from "./components/ModuleDashboard";
 
 // Pages
 import { Login } from "./pages/Login";
@@ -21,13 +22,13 @@ import { Warehouses } from "./pages/masters/Warehouses";
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 };
 
 // Public Route Component (redirect to dashboard if already logged in)
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   return isAuthenticated ? (
     <Navigate to="/dashboard" replace />
   ) : (
@@ -36,6 +37,12 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 function App() {
+  const initializeAuth = useAuthStore(state => state.initializeAuth);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
   return (
     <HashRouter>
       <ThemeProvider>
@@ -50,105 +57,102 @@ function App() {
             }
           />
 
-          {/* Protected Routes with Layout */}
+          {/* Main Dashboard - Module Selection */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
+                <ModuleDashboard />
               </ProtectedRoute>
             }
           />
+
+          {/* Procurement Module */}
           <Route
-            path="/vendors"
+            path="/procurement/*"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Vendors />
+                <Layout module="procurement">
+                  <Routes>
+                    <Route index element={<Dashboard />} />
+                    <Route path="purchase-orders" element={<PurchaseOrders />} />
+                    <Route path="vendors" element={<Vendors />} />
+                  </Routes>
                 </Layout>
               </ProtectedRoute>
             }
           />
+          
+          {/* Inventory Module */}
           <Route
-            path="/products"
+            path="/inventory/*"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Products />
+                <Layout module="inventory">
+                  <Routes>
+                    <Route index element={<Inventory />} />
+                    <Route path="products" element={<Products />} />
+                  </Routes>
                 </Layout>
               </ProtectedRoute>
             }
           />
+          
+          {/* Masters Module */}
           <Route
-            path="/purchase-orders"
+            path="/masters/*"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <PurchaseOrders />
+                <Layout module="masters">
+                  <Routes>
+                    <Route index element={<Categories />} />
+                    <Route path="categories" element={<Categories />} />
+                    <Route path="units" element={<Units />} />
+                    <Route path="warehouses" element={<Warehouses />} />
+                  </Routes>
                 </Layout>
               </ProtectedRoute>
             }
           />
+          
+          {/* Reports Module */}
           <Route
-            path="/inventory"
+            path="/reports/*"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Inventory />
+                <Layout module="reports">
+                  <Routes>
+                    <Route index element={<Reports />} />
+                  </Routes>
                 </Layout>
               </ProtectedRoute>
             }
           />
+
+          {/* Finance Module - Coming Soon */}
           <Route
-            path="/reports"
+            path="/finance/*"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Reports />
+                <Layout module="finance">
+                  <div className="flex items-center justify-center h-64">
+                    <div className="text-center">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Finance Module</h2>
+                      <p className="text-gray-600">Coming Soon...</p>
+                    </div>
+                  </div>
                 </Layout>
               </ProtectedRoute>
             }
           />
+
+          {/* Settings */}
           <Route
             path="/settings"
             element={
               <ProtectedRoute>
                 <Layout>
                   <Settings />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Master Pages */}
-          <Route
-            path="/masters/categories"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Categories />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/masters/units"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Units />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/masters/warehouses"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Warehouses />
                 </Layout>
               </ProtectedRoute>
             }

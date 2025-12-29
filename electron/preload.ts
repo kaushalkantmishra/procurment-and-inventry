@@ -1,6 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+console.log('Preload script executing...');
+
 const api = {
+  // Auth
+  auth: {
+    login: (credentials: any) => ipcRenderer.invoke('auth:login', credentials),
+    logout: () => ipcRenderer.invoke('auth:logout'),
+    verifyToken: (token: string) => ipcRenderer.invoke('auth:verify-token', token),
+  },
+
   // Items
   getItems: () => ipcRenderer.invoke('items:getAll'),
   createItem: (item: any) => ipcRenderer.invoke('items:create', item),
@@ -38,12 +47,8 @@ const api = {
   // Vendors
   getVendors: () => ipcRenderer.invoke('vendors:getAll'),
   createVendor: (vendor: any) => ipcRenderer.invoke('vendors:create', vendor),
-
-  // Auth
-  login: (credentials: any) => ipcRenderer.invoke('auth:login', credentials),
-  register: (userData: any) => ipcRenderer.invoke('auth:register', userData),
-  logout: () => ipcRenderer.invoke('auth:logout'),
-  getCurrentUser: () => ipcRenderer.invoke('auth:getCurrentUser'),
 };
 
-contextBridge.exposeInMainWorld('api', api);
+console.log('Exposing electronAPI to main world...');
+contextBridge.exposeInMainWorld('electronAPI', api);
+console.log('electronAPI exposed successfully');

@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogIn, Package } from "lucide-react";
-import { useStore } from "../store/useStore";
+import { useAuthStore } from "../store/authStore";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const login = useStore((state) => state.login);
-  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const { login, isAuthenticated, isLoading } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Redirect to dashboard when authenticated
   useEffect(() => {
@@ -22,13 +21,18 @@ export const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError("");
 
-    // Simulate API call
-    setTimeout(() => {
-      login(email, password);
-      setIsLoading(false);
-    }, 1000);
+    if (!email || !password) {
+      setError("Please enter both email and password");
+      return;
+    }
+
+    const result = await login(email, password);
+    
+    if (!result.success) {
+      setError(result.message || "Login failed");
+    }
   };
 
   return (
@@ -55,7 +59,7 @@ export const Login: React.FC = () => {
             <Input
               type="email"
               label="Email Address"
-              placeholder="admin@procuredesk.com"
+              placeholder="admin@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -70,21 +74,11 @@ export const Login: React.FC = () => {
               required
             />
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                />
-                <span>Remember me</span>
-              </label>
-              <a
-                href="#"
-                className="text-primary-600 hover:text-primary-700 font-medium"
-              >
-                Forgot password?
-              </a>
-            </div>
+            {error && (
+              <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">
+                {error}
+              </div>
+            )}
 
             <Button
               type="submit"
@@ -92,15 +86,18 @@ export const Login: React.FC = () => {
               size="lg"
               className="w-full"
               isLoading={isLoading}
+              disabled={isLoading}
             >
               <LogIn size={20} className="mr-2" />
-              Sign In
+              {isLoading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-            Demo: Enter any email and password to login
-          </p>
+          <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+            <p className="mb-2">Demo Credentials:</p>
+            <p>Admin: admin@company.com / admin123</p>
+            <p>Employee: employee@company.com / employee123</p>
+          </div>
         </div>
 
         {/* Footer */}

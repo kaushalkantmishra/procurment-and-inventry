@@ -1,194 +1,236 @@
 # Procurement & Inventory Management Desktop App
 
-A full-stack desktop application for managing procurement and inventory operations.
+A modular Electron-based ERP desktop application for managing procurement and inventory operations with PostgreSQL and Drizzle ORM.
 
-## Features
-
-- **Items Management**: Create and manage product catalog
-- **Purchase Orders**: Create and track purchase orders
-- **Goods Receipt Notes (GRN)**: Record incoming inventory
-- **Receipts**: Track sales and outgoing inventory
-- **Real-time Inventory**: Monitor stock levels and transactions
-
-## Tech Stack
-
-### Backend
-- Node.js with Express
-- TypeScript
-- Drizzle ORM
-- PostgreSQL
-- RESTful APIs
-
-### Frontend
-- React with TypeScript
-- Vite
-- Tailwind CSS
-- Zustand (State Management)
-- Electron (Desktop App)
-
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (v18 or higher)
+- Node.js (v18+)
 - PostgreSQL database
 - npm or yarn
 
-### Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd procurement-and-inventory-management-desktop-app
-   ```
-
-2. **Backend Setup**
-   ```bash
-   cd backend
-   npm install
-   ```
-
-3. **Configure Environment**
-   Create a `.env` file in the backend directory:
-   ```env
-   DATABASE_URL=postgresql://username:password@localhost:5432/procurement_db
-   PORT=3000
-   ```
-
-4. **Database Setup**
-   ```bash
-   npm run migrate
-   npm run seed
-   ```
-
-5. **Frontend Setup**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-
-6. **Start Development Servers**
-   
-   **Option 1: Use the batch script (Windows)**
-   ```bash
-   # From root directory
-   start-dev.bat
-   ```
-
-   **Option 2: Manual start**
-   ```bash
-   # Terminal 1 - Backend
-   cd backend
-   npm run dev
-
-   # Terminal 2 - Frontend
-   cd frontend
-   npm run dev
-   ```
-
-7. **Access the Application**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3000
-
-## API Endpoints
-
-### Items
-- `GET /api/items` - Get all items
-- `POST /api/items` - Create new item
-- `GET /api/items/:id` - Get item by ID
-
-### Purchase Orders
-- `GET /api/po` - Get all purchase orders
-- `POST /api/po` - Create new purchase order
-
-### GRN (Goods Receipt Notes)
-- `GET /api/grn` - Get all GRNs
-- `POST /api/grn` - Create new GRN
-
-### Receipts
-- `GET /api/receipts` - Get all receipts
-- `POST /api/receipts` - Create new receipt
-
-### Categories & Units
-- `GET /api/categories` - Get all categories
-- `POST /api/categories` - Create new category
-- `GET /api/units` - Get all units
-- `POST /api/units` - Create new unit
-
-## Development
-
-### Backend Development
+### Setup & Run
 ```bash
+# 1. Clone and install
+git clone <repository-url>
+cd procurement-and-inventory-management-desktop-app
+npm install
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your database credentials
+
+# 3. Setup database
 cd backend
-npm run dev  # Starts with hot reload
+npx drizzle-kit push
+npm run seed
+
+# 4. Start application
+cd ..
+npm run dev
 ```
 
-### Frontend Development
-```bash
-cd frontend
-npm run dev  # Starts Vite dev server
+## 📁 Project Structure
+
 ```
+├── .env                           # Environment configuration
+├── config/env.ts                  # Environment loader
+├── backend/src/
+│   ├── core/                      # Core functionality
+│   │   ├── auth/                  # Authentication
+│   │   ├── rbac/                  # Role-based access control
+│   │   ├── audit/                 # Audit logging
+│   │   └── events/                # Event bus system
+│   ├── db/schema.ts               # Main schema (imports all modules)
+│   └── modules/                   # ERP Modules
+│       ├── masters/               # Master data (users, categories, units, warehouses, vendors)
+│       ├── inventory/             # Items, transactions, receipts, payments
+│       ├── procurement/           # Purchase orders, requests, GRN
+│       ├── finance/               # Future: Finance module
+│       ├── hrms/                  # Future: HR module
+│       └── sales/                 # Future: Sales module
+├── electron/                      # Electron main process
+│   ├── main.ts                    # Main process
+│   ├── preload.ts                 # Preload script
+│   └── ipc/                       # IPC handlers (organized by module)
+└── src/                           # React frontend
+    ├── components/                # Reusable UI components
+    ├── pages/                     # Application pages
+    ├── services/                  # API services
+    └── store/                     # State management
+```
+
+## 🏗️ Architecture
+
+### Electron Desktop Architecture
+- **Main Process**: Database operations, IPC handling
+- **Renderer Process**: React UI
+- **IPC Communication**: Module-based handlers
+- **No HTTP Server**: Direct database access from main process
+
+### Modular ERP Design
+- **Core Layer**: Shared services (auth, RBAC, audit, events)
+- **Module Layer**: Business logic organized by domain
+- **Handler Pattern**: IPC handlers instead of REST controllers
+- **Event-Driven**: Inter-module communication via event bus
+
+## 🗄️ Database Schema
+
+### Masters Module
+- `tbl_users` - User accounts and roles
+- `tbl_categories` - Product categories
+- `tbl_units` - Units of measure
+- `tbl_warehouses` - Warehouse locations
+- `tbl_vendors` - Vendor information
+
+### Inventory Module
+- `tbl_items` - Product catalog
+- `tbl_inventory_transactions` - Stock movements
+- `tbl_receipt_headers` - Sales receipts
+- `tbl_receipt_lines` - Receipt line items
+- `tbl_payments` - Payment records
+
+### Procurement Module
+- `tbl_purchase_requests` - Purchase requests
+- `tbl_purchase_orders` - Purchase orders
+- `tbl_po_lines` - PO line items
+- `tbl_po_distributions` - PO distributions
+- `tbl_grn_headers` - Goods receipt notes
+- `tbl_grn_details` - GRN details
+
+## 🔧 Development
 
 ### Database Operations
 ```bash
 cd backend
-npm run generate  # Generate new migrations
-npm run migrate   # Run migrations
-npm run seed      # Seed initial data
+npx drizzle-kit generate    # Generate migrations
+npx drizzle-kit push        # Push to database
+npm run seed               # Seed initial data
 ```
 
-## Building for Production
+### Running in Development
+```bash
+npm run dev                # Start both frontend and Electron
+```
+
+### Building for Production
+```bash
+npm run build             # Build React app
+npm run electron:build    # Build Electron app
+```
+
+## 🎯 Features
+
+### Current Features
+- **Items Management**: Product catalog with categories and units
+- **Purchase Orders**: Create and track purchase orders
+- **Goods Receipt Notes**: Record incoming inventory
+- **Receipts**: Track sales and outgoing inventory
+- **Real-time Inventory**: Monitor stock levels and transactions
+- **User Management**: Role-based access control
+
+### Future Modules (Ready for Implementation)
+- **Finance**: Accounting, invoicing, payments
+- **HRMS**: Employee management, payroll, attendance
+- **Sales**: Customer management, orders, quotations
+- **Manufacturing**: Work orders, BOM, production planning
+
+## 🔐 Environment Configuration
+
+Create `.env` file in root:
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/procurement_db
+JWT_SECRET=your-secret-key
+JWT_EXPIRES_IN=7d
+NODE_ENV=development
+```
+
+## 🚀 Adding New Modules
+
+### 1. Create Module Structure
+```bash
+mkdir backend/src/modules/[module-name]
+mkdir backend/src/modules/[module-name]/schemas
+mkdir backend/src/modules/[module-name]/services
+mkdir backend/src/modules/[module-name]/handlers
+```
+
+### 2. Create Schema
+```typescript
+// backend/src/modules/[module-name]/schemas/[module].schema.ts
+export const tblModuleTable = pgTable("tbl_module_table", {
+  // Define your table structure
+});
+```
+
+### 3. Create Handlers
+```typescript
+// backend/src/modules/[module-name]/handlers/index.ts
+export class ModuleHandler {
+  static async getAll() {
+    // Business logic
+    eventBus.emitEvent({
+      type: 'MODULE_ACTION',
+      source: 'MODULE',
+      timestamp: new Date(),
+      data: {}
+    });
+  }
+}
+```
+
+### 4. Create IPC Handlers
+```typescript
+// electron/ipc/[module-name]/[entity].handler.ts
+import { ModuleHandler } from '../../backend/src/modules/[module-name]/handlers';
+
+export const moduleHandler = {
+  getAll: () => ModuleHandler.getAll(),
+  // Other methods
+};
+```
+
+### 5. Update Main Schema
+```typescript
+// backend/src/db/schema.ts
+export * from "../modules/[module-name]/schemas/[module].schema";
+```
+
+## 🛠️ Tech Stack
 
 ### Backend
-```bash
-cd backend
-npm run build
-```
+- **Runtime**: Node.js with TypeScript
+- **Database**: PostgreSQL with Drizzle ORM
+- **Architecture**: Modular handlers (no HTTP server)
 
 ### Frontend
+- **Framework**: React with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **State**: Zustand
+
+### Desktop
+- **Framework**: Electron
+- **IPC**: Type-safe communication
+- **Process Separation**: Main/Renderer isolation
+
+## 📝 Scripts
+
 ```bash
-cd frontend
-npm run build
+npm run dev              # Start development
+npm run build            # Build for production
+npm run electron:dev     # Electron development
+npm run electron:build   # Build Electron app
 ```
 
-### Electron App
-```bash
-cd frontend
-npm run electron:dev  # Development mode
-npm run build && npm run electron  # Production build
-```
+## 🤝 Contributing
 
-## Project Structure
+1. Follow the modular architecture
+2. Use handlers instead of controllers
+3. Emit events for inter-module communication
+4. Maintain type safety throughout
+5. Test both IPC and business logic
 
-```
-├── backend/
-│   ├── src/
-│   │   ├── controllers/     # API controllers
-│   │   ├── routes/         # API routes
-│   │   ├── db/            # Database configuration
-│   │   ├── server.ts      # Express server
-│   │   └── seed.ts        # Database seeding
-│   ├── drizzle/           # Database migrations
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── pages/        # Application pages
-│   │   ├── services/     # API services
-│   │   ├── store/        # State management
-│   │   └── App.tsx
-│   ├── electron/         # Electron configuration
-│   └── package.json
-└── README.md
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
+## 📄 License
 
 MIT License

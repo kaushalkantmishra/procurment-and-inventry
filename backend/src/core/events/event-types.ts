@@ -1,0 +1,30 @@
+// Event type definitions for type safety
+export const EVENT_TYPES = {
+  // Procurement Events
+  PROCUREMENT: {
+    PO_CREATED: 'PO_CREATED',
+    PO_APPROVED: 'PO_APPROVED', 
+    PO_CANCELLED: 'PO_CANCELLED',
+  },
+  
+  // Inventory Events
+  INVENTORY: {
+    ITEM_CREATED: 'ITEM_CREATED',
+    STOCK_UPDATED: 'STOCK_UPDATED',
+    GRN_RECEIVED: 'GRN_RECEIVED',
+    RECEIPT_PROCESSED: 'RECEIPT_PROCESSED',
+  },
+  
+  // Master Data Events
+  MASTERS: {
+    CATEGORY_CREATED: 'CATEGORY_CREATED',
+    VENDOR_UPDATED: 'VENDOR_UPDATED',
+    WAREHOUSE_CREATED: 'WAREHOUSE_CREATED',
+  },
+  
+  // Future: Finance Events
+  FINANCE: {
+    INVOICE_CREATED: 'INVOICE_CREATED',
+    PAYMENT_PROCESSED: 'PAYMENT_PROCESSED',
+  }
+} as const;

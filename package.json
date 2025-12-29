@@ -17,10 +17,16 @@
     "package": "npm run build && electron-builder",
     "preview": "vite preview"
   },
-  "keywords": ["electron", "procurement", "inventory", "desktop"],
+  "keywords": [
+    "electron",
+    "procurement",
+    "inventory",
+    "desktop"
+  ],
   "author": "ProcureDesk Team",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
@@ -36,6 +42,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
@@ -68,13 +75,19 @@
       "package.json"
     ],
     "win": {
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "mac": {
-      "target": ["dmg"]
+      "target": [
+        "dmg"
+      ]
     },
     "linux": {
-      "target": ["AppImage"]
+      "target": [
+        "AppImage"
+      ]
     }
   }
 }

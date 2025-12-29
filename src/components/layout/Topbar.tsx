@@ -2,18 +2,22 @@ import React, { useState } from "react";
 import { Search, Sun, Moon, Bell, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../../store/useStore";
+import { useAuthStore } from "../../store/authStore";
 import { useTheme } from "../ThemeProvider";
 
-export const Topbar: React.FC = () => {
+interface TopbarProps {
+  module?: string;
+}
+
+export const Topbar: React.FC<TopbarProps> = ({ module }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const logout = useStore((state) => state.logout);
-  const user = useStore((state) => state.user);
+  const { user, logout } = useAuthStore();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
   };
 
   return (
@@ -27,7 +31,7 @@ export const Topbar: React.FC = () => {
           />
           <input
             type="text"
-            placeholder="Search products, vendors, orders..."
+            placeholder={`Search ${module || 'items'}...`}
             className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
           />
         </div>
@@ -57,7 +61,7 @@ export const Topbar: React.FC = () => {
             className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white text-sm font-semibold">
-              {user?.name?.charAt(0) || "A"}
+              {user?.name?.charAt(0) || "U"}
             </div>
           </button>
 
@@ -70,10 +74,10 @@ export const Topbar: React.FC = () => {
               <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-soft-lg border border-gray-200 dark:border-gray-700 z-20 animate-scale-in">
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {user?.name || "Admin User"}
+                    {user?.name || "User"}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user?.email || "admin@procuredesk.com"}
+                    {user?.email || "user@company.com"}
                   </p>
                 </div>
                 <div className="p-2">

@@ -22,6 +22,13 @@
       "when": 1764660950818,
       "tag": "0002_fancy_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766993452240,
+      "tag": "0003_chunky_maverick",
+      "breakpoints": true
     }
   ]
 }
