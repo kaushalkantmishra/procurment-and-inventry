@@ -23,7 +23,7 @@
     "inventory",
     "desktop"
   ],
-  "author": "ProcureDesk Team",
+  "author": "ERP Desk Team",
   "license": "MIT",
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -64,8 +64,8 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.procuredesk.app",
-    "productName": "ProcureDesk",
+    "appId": "com.erpdesk.app",
+    "productName": "ERP Desk",
     "directories": {
       "output": "release"
     },

@@ -6,61 +6,124 @@ export interface Module {
   description: string;
   icon: string;
   route: string;
-  isActive: boolean;
+  isAvailable: boolean;
+  comingSoon?: boolean;
 }
 
-// Static modules for now (later will come from database)
-const AVAILABLE_MODULES: Module[] = [
+// All ERP modules
+const ALL_MODULES: Module[] = [
   {
     id: 'procurement',
     name: 'Procurement',
-    description: 'Purchase orders, requests, and supplier management',
+    description: 'Purchase orders, vendor management, quote requests, and procurement tracking',
     icon: 'ShoppingCart',
     route: '/procurement',
-    isActive: true
+    isAvailable: true
   },
   {
     id: 'inventory',
     name: 'Inventory',
-    description: 'Items, stock management, and transactions',
+    description: 'Stock levels, item locations, movements, and inventory optimization',
     icon: 'Package',
     route: '/inventory',
-    isActive: true
+    isAvailable: true
   },
   {
-    id: 'masters',
-    name: 'Masters',
-    description: 'Categories, units, warehouses, and vendors',
+    id: 'settings',
+    name: 'Settings',
+    description: 'Application configuration and user management',
     icon: 'Settings',
-    route: '/masters',
-    isActive: true
+    route: '/settings',
+    isAvailable: true
   },
   {
-    id: 'reports',
-    name: 'Reports',
-    description: 'Analytics and reporting dashboard',
+    id: 'analytics',
+    name: 'Reporting and Analytics',
+    description: 'Global dashboards, reports, KPIs, and business intelligence insights',
     icon: 'BarChart',
-    route: '/reports',
-    isActive: true
+    route: '/analytics',
+    isAvailable: false,
+    comingSoon: true
+  },
+  {
+    id: 'financial',
+    name: 'Financial Management',
+    description: 'Accounts payable, receivable, general ledger, budgeting, and financial reporting',
+    icon: 'DollarSign',
+    route: '/financial',
+    isAvailable: false,
+    comingSoon: true
+  },
+  {
+    id: 'hr',
+    name: 'Human Resources (HR) Management',
+    description: 'Recruitment, payroll, benefits, time tracking, and performance management',
+    icon: 'Users',
+    route: '/hr',
+    isAvailable: false,
+    comingSoon: true
+  },
+  {
+    id: 'scm',
+    name: 'Supply Chain Management (SCM)',
+    description: 'Plan, execute, and monitor the flow of goods and services from suppliers to customers',
+    icon: 'Truck',
+    route: '/scm',
+    isAvailable: false,
+    comingSoon: true
+  },
+  {
+    id: 'crm',
+    name: 'Customer Relationship Management (CRM)',
+    description: 'Lead tracking, sales automation, marketing campaigns, and customer service',
+    icon: 'UserCheck',
+    route: '/crm',
+    isAvailable: false,
+    comingSoon: true
+  },
+  {
+    id: 'manufacturing',
+    name: 'Manufacturing',
+    description: 'Production planning, scheduling, quality control, BOM, and work-in-progress tracking',
+    icon: 'Factory',
+    route: '/manufacturing',
+    isAvailable: false,
+    comingSoon: true
+  },
+  {
+    id: 'sales',
+    name: 'Sales and Marketing',
+    description: 'Sales process, quotes, orders, customer invoices, and marketing campaigns',
+    icon: 'TrendingUp',
+    route: '/sales',
+    isAvailable: false,
+    comingSoon: true
+  },
+  {
+    id: 'projects',
+    name: 'Project Management',
+    description: 'Plan, schedule, budget, and track project progress, tasks, and resources',
+    icon: 'Briefcase',
+    route: '/projects',
+    isAvailable: false,
+    comingSoon: true
   }
 ];
 
 class ModuleService {
   async getUserModules(userRole: 'admin' | 'employee'): Promise<Module[]> {
-    // For now, return based on role
-    // Later this will fetch from database based on user permissions
     if (userRole === 'admin') {
-      return AVAILABLE_MODULES;
+      return ALL_MODULES.filter(module => module.id !== 'settings');
     } else {
-      // Employee gets limited access
-      return AVAILABLE_MODULES.filter(module => 
-        ['inventory', 'reports'].includes(module.id)
+      // Employee gets limited access - procurement and inventory, and analytics
+      return ALL_MODULES.filter(module => 
+        ['procurement', 'inventory', 'analytics'].includes(module.id)
       );
     }
   }
 
   async getAllModules(): Promise<Module[]> {
-    return AVAILABLE_MODULES;
+    return ALL_MODULES;
   }
 }
 

@@ -102,7 +102,7 @@ export const Settings: React.FC = () => {
               type="email"
               label="Email Address"
               placeholder="your@email.com"
-              defaultValue={user?.email || "admin@procuredesk.com"}
+              defaultValue={user?.email || "admin@erpdesk.com"}
             />
             <Input
               label="Role"
@@ -222,7 +222,7 @@ export const Settings: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              ProcureDesk UI
+              ERP Desk UI
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Version 1.0.0 • Procurement & Inventory Management System

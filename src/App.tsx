@@ -14,6 +14,7 @@ import { PurchaseOrders } from "./pages/PurchaseOrders";
 import { Inventory } from "./pages/Inventory";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
+import { ComingSoon } from "./pages/ComingSoon";
 import { Categories } from "./pages/masters/Categories";
 import { Units } from "./pages/masters/Units";
 import { Warehouses } from "./pages/masters/Warehouses";
@@ -82,7 +83,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
           {/* Inventory Module */}
           <Route
             path="/inventory/*"
@@ -92,20 +93,6 @@ function App() {
                   <Routes>
                     <Route index element={<Inventory />} />
                     <Route path="products" element={<Products />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Masters Module */}
-          <Route
-            path="/masters/*"
-            element={
-              <ProtectedRoute>
-                <Layout module="masters">
-                  <Routes>
-                    <Route index element={<Categories />} />
                     <Route path="categories" element={<Categories />} />
                     <Route path="units" element={<Units />} />
                     <Route path="warehouses" element={<Warehouses />} />
@@ -151,9 +138,19 @@ function App() {
             path="/settings"
             element={
               <ProtectedRoute>
-                <Layout>
+                <Layout module="settings">
                   <Settings />
                 </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Coming Soon */}
+          <Route
+            path="/coming-soon"
+            element={
+              <ProtectedRoute>
+                <ComingSoon />
               </ProtectedRoute>
             }
           />
