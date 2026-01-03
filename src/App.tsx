@@ -18,6 +18,7 @@ import { ComingSoon } from "./pages/ComingSoon";
 import { Categories } from "./pages/masters/Categories";
 import { Units } from "./pages/masters/Units";
 import { Warehouses } from "./pages/masters/Warehouses";
+import { VendorsMaster } from "./pages/masters/VendorsMaster";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
@@ -78,6 +79,7 @@ function App() {
                     <Route index element={<Dashboard />} />
                     <Route path="purchase-orders" element={<PurchaseOrders />} />
                     <Route path="vendors" element={<Vendors />} />
+                    <Route path="reports" element={<Reports />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
@@ -96,19 +98,20 @@ function App() {
                     <Route path="categories" element={<Categories />} />
                     <Route path="units" element={<Units />} />
                     <Route path="warehouses" element={<Warehouses />} />
+                    <Route path="vendors" element={<VendorsMaster />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
             }
           />
           
-          {/* Reports Module */}
+          {/* Reports Module */}                            
           <Route
             path="/reports/*"
             element={
               <ProtectedRoute>
                 <Layout module="reports">
-                  <Routes>
+                  <Routes>    
                     <Route index element={<Reports />} />
                   </Routes>
                 </Layout>

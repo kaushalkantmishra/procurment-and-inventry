@@ -1,7 +1,5 @@
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
-import { initBackend } from '../backend';
-import './ipc';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -10,9 +8,9 @@ const createWindow = (): void => {
     width: 1400,
     height: 900,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      enableRemoteModule: true,
+      nodeIntegration: false,
+      contextIsolation: true,
+      enableRemoteModule: false,
     },
   });
 
@@ -22,7 +20,7 @@ const createWindow = (): void => {
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://localhost:3001;"
         ]
       }
     });
@@ -40,20 +38,14 @@ const createWindow = (): void => {
   });
 };
 
-app.whenReady().then(async () => {
-  try {
-    await initBackend();
-    createWindow();
+app.whenReady().then(() => {
+  createWindow();
 
-    app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
-      }
-    });
-  } catch (error) {
-    console.error('Failed to initialize application:', error);
-    app.quit();
-  }
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
 });
 
 app.on('window-all-closed', () => {

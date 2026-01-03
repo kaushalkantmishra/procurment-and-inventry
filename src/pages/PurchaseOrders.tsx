@@ -6,10 +6,12 @@ import { Modal } from "../components/ui/Modal";
 import { Select } from "../components/ui/Select";
 import { Input } from "../components/ui/Input";
 import { Badge } from "../components/ui/Badge";
+import { apiService } from "../services/api";
 import { useStore } from "../store/useStore";
 
 export const PurchaseOrders: React.FC = () => {
   const { purchaseOrders, items, loading, error, fetchPurchaseOrders, fetchItems, createPurchaseOrder } = useStore();
+  const [vendors, setVendors] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewingPO, setViewingPO] = useState<any | null>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
@@ -17,20 +19,31 @@ export const PurchaseOrders: React.FC = () => {
   useEffect(() => {
     fetchPurchaseOrders();
     fetchItems();
+    fetchVendors();
   }, [fetchPurchaseOrders, fetchItems]);
+
+  const fetchVendors = async () => {
+    try {
+      const response = await apiService.getVendors();
+      const vendorData = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      setVendors(vendorData);
+    } catch (error) {
+      console.error('Failed to fetch vendors:', error);
+    }
+  };
 
   const transformedPOs = useMemo(() => {
     return purchaseOrders.map(po => ({
       ...po,
-      date: po.poDate,
-      vendor: po.supplierId || 'Unknown Supplier',
+      date: po.po_date,
+      vendor: po.supplier_id || 'Unknown Supplier',
       expectedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      totalAmount: parseFloat(po.totalAmount || '0')
+      totalAmount: parseFloat(po.total_amount || '0')
     }));
   }, [purchaseOrders]);
 
   const columns = [
-    { key: "poNumber", header: "PO Number", sortable: true },
+    { key: "po_number", header: "PO Number", sortable: true },
     { key: "vendor", header: "Vendor", sortable: true },
     {
       key: "date",
@@ -132,18 +145,18 @@ export const PurchaseOrders: React.FC = () => {
           const formData = new FormData(e.currentTarget);
           
           const poData = {
-            poNumber: `PO-${Date.now()}`,
-            supplierId: formData.get('vendor') as string,
-            buyerId: 'BUYER001',
-            totalAmount: selectedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0).toString(),
+            po_number: `PO-${Date.now()}`,
+            supplier_id: formData.get('vendor') as string,
+            buyer_id: 'BUYER001',
+            total_amount: selectedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0).toString(),
             status: 'Draft',
-            lines: selectedItems.map((item, index) => ({
-              lineNumber: index + 1,
-              itemId: item.itemId,
+            lines: selectedItems.map((item: any, index: number) => ({
+              line_number: index + 1,
+              item_id: item.itemId,
               description: item.description,
               quantity: item.quantity,
-              unitPrice: item.unitPrice.toString(),
-              lineTotal: (item.quantity * item.unitPrice).toString()
+              unit_price: item.unitPrice.toString(),
+              line_total: (item.quantity * item.unitPrice).toString()
             }))
           };
 
@@ -155,13 +168,10 @@ export const PurchaseOrders: React.FC = () => {
             <Select
               name="vendor"
               label="Vendor"
-              options={[
-                { value: "VENDOR001", label: "Global Supply Co." },
-                { value: "VENDOR002", label: "Office Essentials Inc." },
-                { value: "VENDOR003", label: "Tech Hardware Ltd." },
-                { value: "VENDOR004", label: "Industrial Parts Group" },
-                { value: "VENDOR005", label: "Smart Tech Distributors" },
-              ]}
+              options={vendors.map((vendor) => ({
+                value: vendor.vendor_code,
+                label: vendor.vendor_name,
+              }))}
               required
             />
             <Input type="date" label="Expected Delivery" required />
@@ -176,10 +186,10 @@ export const PurchaseOrders: React.FC = () => {
                   <Select
                     id="product-select"
                     label="Product"
-                    options={items.map((item) => ({
-                      value: item.itemId.toString(),
-                      label: `${item.itemName} (${item.sku})`,
-                    }))}
+                    options={items?.map((item, idx) => ({
+                      value: item.itemId?.toString() || `empty-${idx}`,
+                      label: `${item.itemName || 'Unknown'} (${item.sku || 'N/A'})`,
+                    })) || []}
                   />
                 </div>
                 <div className="col-span-2">
@@ -206,7 +216,7 @@ export const PurchaseOrders: React.FC = () => {
                       const priceInput = document.getElementById('price-input') as HTMLInputElement;
                       
                       if (productSelect.value && quantityInput.value && priceInput.value) {
-                        const selectedItem = items.find(item => item.itemId.toString() === productSelect.value);
+                        const selectedItem = items?.find(item => item.itemId?.toString() === productSelect.value);
                         if (selectedItem) {
                           const newItem = {
                             itemId: selectedItem.itemId,
@@ -233,7 +243,7 @@ export const PurchaseOrders: React.FC = () => {
               <div className="mt-4">
                 <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Selected Items</h4>
                 <div className="space-y-2">
-                  {selectedItems.map((item, index) => (
+                  {selectedItems.map((item: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
                       <span className="text-sm">{item.description}</span>
                       <span className="text-sm">Qty: {item.quantity} × ${item.unitPrice.toFixed(2)} = ${(item.quantity * item.unitPrice).toFixed(2)}</span>
@@ -341,7 +351,7 @@ export const PurchaseOrders: React.FC = () => {
                 Items
               </h4>
               <div className="space-y-2">
-                {viewingPO.items.map((item, index) => (
+                {viewingPO.items.map((item: any, index: number) => (
                   <div
                     key={index}
                     className="flex justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm"

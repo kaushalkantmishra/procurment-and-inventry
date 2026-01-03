@@ -86,17 +86,14 @@ export const Inventory: React.FC = () => {
 
   // Transform items for display
   const transformedItems = useMemo(() => {
+    if (!Array.isArray(items)) return [];
     return items.map(item => ({
-      id: item.itemId.toString(),
-      sku: item.sku,
-      name: item.itemName,
-      stockQuantity: item.safetyStock || 0,
+      id: item.id?.toString() || '',
+      sku: item.sku || '',
+      name: item.item_name || '',
+      stockQuantity: item.safety_stock || 0,
     }));
   }, [items]);
-
-
-
-
 
   return (
     <div className="space-y-6">
@@ -226,7 +223,7 @@ export const Inventory: React.FC = () => {
 
         {!loading && !error && (
           <DataTable
-            data={transactions.map(tx => ({
+            data={Array.isArray(transactions) ? transactions.map(tx => ({
               id: tx.transactionId,
               type: tx.transactionType === 'stock-in' ? 'Stock In' : 'Stock Out',
               product: tx.item?.itemName || 'Unknown Item',
@@ -234,7 +231,7 @@ export const Inventory: React.FC = () => {
               date: new Date(tx.transactionDate).toLocaleDateString(),
               reference: tx.reference || 'N/A',
               performedBy: tx.performedBy || 'System'
-            }))}
+            })) : []}
             columns={[
               { key: "type", header: "Type", sortable: true },
               { key: "product", header: "Product", sortable: true },

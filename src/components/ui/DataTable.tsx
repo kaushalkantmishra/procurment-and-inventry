@@ -37,6 +37,7 @@ export function DataTable<T extends Record<string, any>>({
 
   // Filter data based on search term
   const filteredData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
     if (!searchTerm) return data;
 
     return data.filter((item) =>
@@ -48,6 +49,7 @@ export function DataTable<T extends Record<string, any>>({
 
   // Sort data
   const sortedData = useMemo(() => {
+    if (!Array.isArray(filteredData)) return [];
     if (!sortConfig) return filteredData;
 
     return [...filteredData].sort((a, b) => {
@@ -62,11 +64,12 @@ export function DataTable<T extends Record<string, any>>({
 
   // Paginate data
   const paginatedData = useMemo(() => {
+    if (!Array.isArray(sortedData)) return [];
     const startIndex = (currentPage - 1) * itemsPerPage;
     return sortedData.slice(startIndex, startIndex + itemsPerPage);
   }, [sortedData, currentPage]);
 
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  const totalPages = Math.ceil((Array.isArray(sortedData) ? sortedData.length : 0) / itemsPerPage);
 
   const handleSort = (key: string) => {
     setSortConfig((current) => {
@@ -173,8 +176,8 @@ export function DataTable<T extends Record<string, any>>({
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <div className="text-sm text-gray-600 dark:text-gray-400">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-            {Math.min(currentPage * itemsPerPage, sortedData.length)} of{" "}
-            {sortedData.length} results
+            {Math.min(currentPage * itemsPerPage, Array.isArray(sortedData) ? sortedData.length : 0)} of{" "}
+            {Array.isArray(sortedData) ? sortedData.length : 0} results
           </div>
           <div className="flex gap-2">
             <button

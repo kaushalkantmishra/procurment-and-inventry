@@ -6,11 +6,13 @@ import { Modal } from "../components/ui/Modal";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Badge } from "../components/ui/Badge";
-import { useStore } from "../store/useStore";
+// import { useStore } from "../store/useStore";
 import { apiService } from "../services/api";
 
 export const Products: React.FC = () => {
-  const { items, loading, error, fetchItems, createItem } = useStore();
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -21,38 +23,54 @@ export const Products: React.FC = () => {
   useEffect(() => {
     fetchItems();
     fetchMasterData();
-  }, [fetchItems]);
+  }, []);
+
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.getItems();
+      setItems(response.data || response || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch items');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchMasterData = async () => {
     try {
-      const [categoriesData, unitsData] = await Promise.all([
+      const [categoriesResponse, unitsResponse] = await Promise.all([
         apiService.getCategories(),
         apiService.getUnits()
       ]);
-      setCategories(categoriesData);
-      setUnits(unitsData);
+      setCategories(categoriesResponse.data || categoriesResponse || []);
+      setUnits(unitsResponse.data || unitsResponse || []);
     } catch (err) {
       console.error('Failed to fetch master data:', err);
+      setCategories([]);
+      setUnits([]);
     }
   };
 
   // Transform items to match UI expectations
   const transformedItems = useMemo(() => {
+    if (!Array.isArray(items)) return [];
     return items.map(item => {
-      const category = categories.find(cat => cat.categoryId === item.categoryId);
+      const category = categories.find(cat => cat.id === item.category_id);
       return {
-        id: item.itemId.toString(),
+        id: item.id.toString(),
         sku: item.sku,
-        name: item.itemName,
-        category: category?.categoryName || 'Unknown',
-        categoryId: item.categoryId,
-        unit: item.unitOfMeasure || 'PC',
-        price: parseFloat(item.sellingPrice || '0'),
-        stockQuantity: item.safetyStock || 0,
-        reorderLevel: item.reorderLevel,
-        supplier: item.vendorCode || 'Unknown',
-        status: item.safetyStock > item.reorderLevel ? 'in-stock' : 
-                item.safetyStock > 0 ? 'low-stock' : 'out-of-stock',
+        name: item.item_name,
+        category: category?.category_name || 'Unknown',
+        categoryId: item.category_id,
+        unit: item.unit_of_measure || 'PC',
+        price: parseFloat(item.selling_price || '0'),
+        stockQuantity: item.safety_stock || 0,
+        reorderLevel: item.reorder_level,
+        supplier: item.vendor_code || 'Unknown',
+        status: item.safety_stock > item.reorder_level ? 'in-stock' : 
+                item.safety_stock > 0 ? 'low-stock' : 'out-of-stock',
         lastUpdated: new Date().toISOString().split('T')[0]
       };
     });
@@ -137,22 +155,23 @@ export const Products: React.FC = () => {
     
     const itemData = {
       sku: formData.get('sku') as string,
-      itemName: formData.get('name') as string,
-      categoryId: parseInt(formData.get('category') as string) || null,
-      unitOfMeasure: formData.get('unit') as string,
-      unitCost: formData.get('price') as string,
-      sellingPrice: formData.get('price') as string,
-      vendorCode: formData.get('supplier') as string,
-      reorderLevel: parseInt(formData.get('reorderLevel') as string) || 0,
-      safetyStock: parseInt(formData.get('stockQuantity') as string) || 0,
-      leadTimeDays: 0,
-      batchTracking: false,
-      isActive: true,
-      discountAllowed: false,
-      discountRate: '0'
+      item_name: formData.get('name') as string,
+      category_id: parseInt(formData.get('category') as string) || undefined,
+      unit_of_measure: formData.get('unit') as string,
+      unit_cost: formData.get('price') as string,
+      selling_price: formData.get('price') as string,
+      vendor_code: formData.get('supplier') as string,
+      reorder_level: parseInt(formData.get('reorderLevel') as string) || 0,
+      safety_stock: parseInt(formData.get('stockQuantity') as string) || 0,
+      lead_time_days: 0,
+      batch_tracking: false,
+      is_active: true,
+      discount_allowed: false,
+      discount_rate: '0'
     };
 
-    await createItem(itemData);
+    await apiService.createItem(itemData);
+    fetchItems();
     handleCloseModal();
   };
 
@@ -256,11 +275,11 @@ export const Products: React.FC = () => {
             <Select
               name="category"
               label="Category"
-              options={categories.map(cat => ({
-                value: cat.categoryId.toString(),
-                label: cat.categoryName
-              }))}
-              defaultValue={editingProduct?.category}
+              options={Array.isArray(categories) ? categories.map(cat => ({
+                value: cat.id.toString(),
+                label: cat.category_name
+              })) : []}
+              defaultValue={editingProduct?.categoryId}
               required
             />
             <Input
@@ -275,10 +294,10 @@ export const Products: React.FC = () => {
             <Select
               name="unit"
               label="Unit"
-              options={units.map(unit => ({
-                value: unit.unitId,
-                label: `${unit.name} (${unit.unitId})`
-              }))}
+              options={Array.isArray(units) ? units.map(unit => ({
+                value: unit.unit_id,
+                label: `${unit.name} (${unit.unit_id})`
+              })) : []}
               defaultValue={editingProduct?.unit}
               required
             />

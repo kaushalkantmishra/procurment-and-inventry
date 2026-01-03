@@ -30,14 +30,14 @@ interface Item {
 }
 
 interface PurchaseOrder {
-  poId: number;
-  poNumber: string;
-  supplierId?: string;
-  poDate: string;
-  buyerId?: string;
-  totalAmount: string;
+  id: number;
+  po_number: string;
+  supplier_id?: string;
+  po_date: string;
+  buyer_id?: string;
+  total_amount: string;
   status: string;
-  termsId?: string;
+  terms_id?: string;
   lines?: any[];
 }
 
@@ -138,10 +138,11 @@ export const useStore = create<StoreState>((set, get) => ({
   fetchItems: async () => {
     try {
       set({ loading: true, error: null });
-      const items = await apiService.getItems();
+      const response = await apiService.getItems();
+      const items = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
       set({ items, loading: false });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch items', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch items', loading: false, items: [] });
     }
   },
 
@@ -158,17 +159,19 @@ export const useStore = create<StoreState>((set, get) => ({
   fetchPurchaseOrders: async () => {
     try {
       set({ loading: true, error: null });
-      const purchaseOrders = await apiService.getPurchaseOrders();
+      const response = await apiService.getPurchaseOrders();
+      const purchaseOrders = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
       set({ purchaseOrders, loading: false });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch purchase orders', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch purchase orders', loading: false, purchaseOrders: [] });
     }
   },
 
   createPurchaseOrder: async (po) => {
     try {
       set({ loading: true, error: null });
-      const newPO = await apiService.createPurchaseOrder(po);
+      const response = await apiService.createPurchaseOrder(po);
+      const newPO = response.data || response;
       set((state) => ({ purchaseOrders: [...state.purchaseOrders, newPO], loading: false }));
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to create purchase order', loading: false });

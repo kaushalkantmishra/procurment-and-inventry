@@ -1,20 +1,18 @@
-// Main Schema File - Imports from all modules
+// Main Schema File - Imports from all schema files
 
-// Import all tables from modules
-export * from "../modules/masters/schemas/masters.schema";
-export * from "../modules/inventory/schemas/inventory.schema";
-export * from "../modules/procurement/schemas/procurement.schema";
+// Import all tables from schema files
+export * from "./masters.schema";
+export * from "./inventory.schema";
+export * from "./procurement.schema";
 
 // Backward compatibility aliases
 import { 
-  users,
-  roles,
-  type Role,
+  tblUsers,
   tblUnits, 
   tblCategories, 
   tblWarehouses, 
   tblVendors 
-} from "../modules/masters/schemas/masters.schema";
+} from "./masters.schema";
 
 import { 
   tblItems,
@@ -22,7 +20,7 @@ import {
   tblReceiptHeaders,
   tblReceiptLines,
   tblPayments
-} from "../modules/inventory/schemas/inventory.schema";
+} from "./inventory.schema";
 
 import {
   tblPurchaseRequests,
@@ -31,13 +29,14 @@ import {
   tblPoDistributions,
   tblGrnHeaders,
   tblGrnDetails
-} from "../modules/procurement/schemas/procurement.schema";
+} from "./procurement.schema";
 
 export const units = tblUnits;
 export const categories = tblCategories;
 export const warehouses = tblWarehouses;
 export const items = tblItems;
 export const vendors = tblVendors;
+export const users = tblUsers;
 
 // Additional table aliases for backward compatibility
 export const inventoryTransactions = tblInventoryTransactions;
@@ -50,6 +49,3 @@ export const poLines = tblPoLines;
 export const poDistributions = tblPoDistributions;
 export const grnHeaders = tblGrnHeaders;
 export const grnDetails = tblGrnDetails;
-export const userRoles = roles;
-export type { Role };
-export const usersTable = users;

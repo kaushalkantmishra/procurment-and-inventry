@@ -16,62 +16,64 @@ git clone <repository-url>
 cd procurement-and-inventory-management-desktop-app
 npm install
 
-# 2. Configure environment
-cp .env.example .env
+# 2. Setup backend
+cd backend
+npm install
+cp .env.sample .env
 # Edit .env with your database credentials
 
 # 3. Setup database
-cd backend
-npx drizzle-kit push
-npm run seed
+npm run db:push
+npm run db:seed
 
-# 4. Start application
+# 4. Start backend server
+npm run dev
+
+# 5. Start frontend (in new terminal)
 cd ..
 npm run dev
+```
+
+### Development with All Services
+```bash
+# Start backend, frontend, and electron together
+npm run dev:full
 ```
 
 ## 📁 Project Structure
 
 ```
-├── .env                           # Environment configuration
-├── config/env.ts                  # Environment loader
-├── backend/src/
-│   ├── core/                      # Core functionality
-│   │   ├── auth/                  # Authentication
-│   │   ├── rbac/                  # Role-based access control
-│   │   ├── audit/                 # Audit logging
-│   │   └── events/                # Event bus system
-│   ├── db/schema.ts               # Main schema (imports all modules)
-│   └── modules/                   # ERP Modules
-│       ├── masters/               # Master data (users, categories, units, warehouses, vendors)
-│       ├── inventory/             # Items, transactions, receipts, payments
-│       ├── procurement/           # Purchase orders, requests, GRN
-│       ├── finance/               # Future: Finance module
-│       ├── hrms/                  # Future: HR module
-│       └── sales/                 # Future: Sales module
+├── backend/                       # Backend API Server
+│   ├── src/
+│   │   ├── core/                  # Core functionality
+│   │   ├── db/                    # Database configuration
+│   │   ├── modules/               # ERP Modules
+│   │   └── routes/                # API Routes
+│   ├── services/                  # Business logic services
+│   ├── server.ts                  # Express server
+│   └── package.json               # Backend dependencies
 ├── electron/                      # Electron main process
-│   ├── main.ts                    # Main process
-│   ├── preload.ts                 # Preload script
-│   └── ipc/                       # IPC handlers (organized by module)
+│   └── main.ts                    # Simplified main process
 └── src/                           # React frontend
     ├── components/                # Reusable UI components
     ├── pages/                     # Application pages
-    ├── services/                  # API services
+    ├── services/                  # HTTP API services
     └── store/                     # State management
 ```
 
 ## 🏗️ Architecture
 
-### Electron Desktop Architecture
-- **Main Process**: Database operations, IPC handling
-- **Renderer Process**: React UI
-- **IPC Communication**: Module-based handlers
-- **No HTTP Server**: Direct database access from main process
+### Separated Backend Architecture
+- **Backend Server**: Standalone Express.js API server (port 3001)
+- **Frontend**: React app served by Vite (port 5173)
+- **Electron App**: Desktop wrapper that loads the React frontend
+- **Communication**: HTTP REST API calls between frontend and backend
+- **Database**: Direct PostgreSQL connection from backend server
 
 ### Modular ERP Design
 - **Core Layer**: Shared services (auth, RBAC, audit, events)
 - **Module Layer**: Business logic organized by domain
-- **Handler Pattern**: IPC handlers instead of REST controllers
+- **API Layer**: RESTful endpoints instead of IPC handlers
 - **Event-Driven**: Inter-module communication via event bus
 
 ## 🗄️ Database Schema
@@ -108,15 +110,32 @@ npx drizzle-kit push        # Push to database
 npm run seed               # Seed initial data
 ```
 
-### Running in Development
+### Development
 ```bash
-npm run dev                # Start both frontend and Electron
+# Backend only
+cd backend
+npm run dev
+
+# Frontend only
+npm run dev:vite
+
+# Electron only
+npm run dev:electron
+
+# All services together
+npm run dev:full
 ```
 
 ### Building for Production
 ```bash
-npm run build             # Build React app
-npm run electron:build    # Build Electron app
+# Build backend
+npm run build:backend
+
+# Build frontend
+npm run build
+
+# Build Electron app
+npm run electron:build
 ```
 
 ## 🎯 Features

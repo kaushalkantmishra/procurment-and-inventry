@@ -18,8 +18,9 @@ export const Vendors: React.FC = () => {
   const fetchVendors = async () => {
     try {
       setLoading(true);
-      const data = await apiService.getVendors();
-      setVendors(data);
+      const response = await apiService.getVendors();
+      const vendorData = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      setVendors(vendorData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch vendors');
     } finally {
@@ -36,16 +37,16 @@ export const Vendors: React.FC = () => {
     const formData = new FormData(e.currentTarget);
     
     const vendorData = {
-      vendorCode: formData.get('vendorCode') as string,
-      vendorName: formData.get('vendorName') as string,
-      contactPerson: formData.get('contactPerson') as string,
+      vendor_code: formData.get('vendorCode') as string,
+      vendor_name: formData.get('vendorName') as string,
+      contact_person: formData.get('contactPerson') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
       address: formData.get('address') as string,
       city: formData.get('city') as string,
       country: formData.get('country') as string,
-      paymentTerms: formData.get('paymentTerms') as string,
-      isActive: formData.get('isActive') === 'true',
+      payment_terms: formData.get('paymentTerms') as string,
+      is_active: formData.get('isActive') === 'true',
     };
 
     try {
@@ -58,8 +59,8 @@ export const Vendors: React.FC = () => {
   };
 
   const columns = [
-    { key: "vendorCode", header: "Code", sortable: true },
-    { key: "vendorName", header: "Vendor Name", sortable: true },
+    { key: "vendor_code", header: "Code", sortable: true },
+    { key: "vendor_name", header: "Vendor Name", sortable: true },
     {
       key: "contact",
       header: "Contact",
@@ -77,13 +78,13 @@ export const Vendors: React.FC = () => {
       ),
     },
     { key: "city", header: "City", sortable: true },
-    { key: "paymentTerms", header: "Payment Terms" },
+    { key: "payment_terms", header: "Payment Terms" },
     {
       key: "status",
       header: "Status",
       render: (vendor: any) => (
-        <Badge variant={vendor.isActive ? "success" : "default"}>
-          {vendor.isActive ? "Active" : "Inactive"}
+        <Badge variant={vendor.is_active ? "success" : "default"}>
+          {vendor.is_active ? "Active" : "Inactive"}
         </Badge>
       ),
     },
@@ -161,14 +162,14 @@ export const Vendors: React.FC = () => {
               name="vendorCode"
               label="Vendor Code"
               placeholder="VEN001"
-              defaultValue={editingVendor?.vendorCode}
+              defaultValue={editingVendor?.vendor_code}
               required
             />
             <Input
               name="vendorName"
               label="Vendor Name"
               placeholder="Company Name"
-              defaultValue={editingVendor?.vendorName}
+              defaultValue={editingVendor?.vendor_name}
               required
             />
           </div>
@@ -176,7 +177,7 @@ export const Vendors: React.FC = () => {
             name="contactPerson"
             label="Contact Person"
             placeholder="John Doe"
-            defaultValue={editingVendor?.contactPerson}
+            defaultValue={editingVendor?.contact_person}
           />
           <div className="grid grid-cols-2 gap-4">
             <Input
@@ -221,7 +222,7 @@ export const Vendors: React.FC = () => {
                 { value: "net-60", label: "Net 60" },
                 { value: "cod", label: "COD" },
               ]}
-              defaultValue={editingVendor?.paymentTerms}
+              defaultValue={editingVendor?.payment_terms}
             />
           </div>
           <Select
@@ -231,7 +232,7 @@ export const Vendors: React.FC = () => {
               { value: "true", label: "Active" },
               { value: "false", label: "Inactive" },
             ]}
-            defaultValue={editingVendor?.isActive ? "true" : "false"}
+            defaultValue={editingVendor?.is_active ? "true" : "false"}
             required
           />
           <div className="flex justify-end gap-3 pt-4">
