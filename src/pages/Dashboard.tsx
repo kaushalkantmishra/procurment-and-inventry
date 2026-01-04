@@ -36,14 +36,14 @@ export const Dashboard: React.FC = () => {
 
   // Calculate KPIs from real data
   const lowStockItems = items.filter(
-    (item) => item.safetyStock <= item.reorderLevel
+    (item) => item.safety_stock <= item.reorder_level
   ).length;
   const totalVendors = 5; // Static for now
   const openPOs = purchaseOrders.filter(
     (po) => po.status === "Draft" || po.status === "Approved"
   ).length;
   const stockValue = items.reduce(
-    (sum, item) => sum + parseFloat(item.sellingPrice || '0') * (item.safetyStock || 0),
+    (sum, item) => sum + parseFloat(item.selling_price || '0') * (item.safety_stock || 0),
     0
   );
 

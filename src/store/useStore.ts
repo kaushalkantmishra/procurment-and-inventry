@@ -9,24 +9,29 @@ interface User {
 }
 
 interface Item {
-  itemId: number;
+  id: number;
   sku: string;
-  itemName: string;
-  categoryId?: number;
-  unitOfMeasure?: string;
-  unitCost: string;
-  sellingPrice: string;
-  vendorCode?: string;
-  reorderLevel: number;
-  safetyStock: number;
-  leadTimeDays: number;
-  storageLocation?: string;
-  batchTracking: boolean;
-  isActive: boolean;
-  photoPath?: string;
-  expiryDate?: string;
-  discountAllowed: boolean;
-  discountRate: string;
+  item_name: string;
+  category_id?: number;
+  unit_of_measure?: string;
+  unit_cost: string;
+  selling_price: string;
+  vendor_code?: string;
+  reorder_level: number;
+  safety_stock: number;
+  lead_time_days: number;
+  storage_location?: string;
+  batch_tracking: boolean;
+  is_active: boolean;
+  photo_path?: string;
+  expiry_date?: string;
+  discount_allowed: boolean;
+  discount_rate: string;
+  status: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+  is_deleted: boolean;
 }
 
 interface PurchaseOrder {
@@ -38,6 +43,10 @@ interface PurchaseOrder {
   total_amount: string;
   status: string;
   terms_id?: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+  is_deleted: boolean;
   lines?: any[];
 }
 
@@ -218,6 +227,15 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 }));
+
+// Theme hook for compatibility
+export const useTheme = () => {
+  const theme = useStore((state) => state.theme);
+  const toggleTheme = useStore((state) => state.toggleTheme);
+  const setTheme = useStore((state) => state.setTheme);
+  
+  return { theme, toggleTheme, setTheme };
+};
 
 // Initialize from localStorage
 if (typeof window !== "undefined") {

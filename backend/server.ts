@@ -4,21 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import os from 'os';
 import { db } from './src/db';
-import { authRoutes } from './src/routes/auth.routes';
-import { itemRoutes } from './src/routes/item.routes';
-import { categoryRoutes } from './src/routes/category.routes';
-import { moduleRoutes } from './src/routes/module.routes';
-import { unitRoutes } from './src/routes/unit.routes';
-import { warehouseRoutes } from './src/routes/warehouse.routes';
-import { vendorRoutes } from './src/routes/vendor.routes';
-import { grnRoutes } from './src/routes/grn.routes';
-import { receiptRoutes } from './src/routes/receipt.routes';
-import { purchaseOrderRoutes } from './src/routes/purchaseOrder.routes';
-import { poLineRoutes } from './src/routes/poLine.routes';
-import { grnHeaderRoutes } from './src/routes/grnHeader.routes';
-import { grnDetailRoutes } from './src/routes/grnDetail.routes';
-import { purchaseRequestRoutes } from './src/routes/purchaseRequest.routes';
-import { inventoryRoutes } from './src/routes/inventory.routes';
+import { apiRoutes } from './src/routes';
 
 dotenv.config();
 
@@ -53,21 +39,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/items', itemRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/modules', moduleRoutes);
-app.use('/api/units', unitRoutes);
-app.use('/api/warehouses', warehouseRoutes);
-app.use('/api/vendors', vendorRoutes);
-app.use('/api/grn', grnRoutes);
-app.use('/api/receipts', receiptRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/purchase-orders', purchaseOrderRoutes);
-app.use('/api/po-lines', poLineRoutes);
-app.use('/api/grn-headers', grnHeaderRoutes);
-app.use('/api/grn-details', grnDetailRoutes);
-app.use('/api/purchase-requests', purchaseRequestRoutes);
+app.use('/api', apiRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

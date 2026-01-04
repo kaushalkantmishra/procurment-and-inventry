@@ -187,8 +187,8 @@ export const PurchaseOrders: React.FC = () => {
                     id="product-select"
                     label="Product"
                     options={items?.map((item, idx) => ({
-                      value: item.itemId?.toString() || `empty-${idx}`,
-                      label: `${item.itemName || 'Unknown'} (${item.sku || 'N/A'})`,
+                      value: item.id?.toString() || `empty-${idx}`,
+                      label: `${item.item_name || 'Unknown'} (${item.sku || 'N/A'})`,
                     })) || []}
                   />
                 </div>
@@ -216,11 +216,11 @@ export const PurchaseOrders: React.FC = () => {
                       const priceInput = document.getElementById('price-input') as HTMLInputElement;
                       
                       if (productSelect.value && quantityInput.value && priceInput.value) {
-                        const selectedItem = items?.find(item => item.itemId?.toString() === productSelect.value);
+                        const selectedItem = items?.find(item => item.id?.toString() === productSelect.value);
                         if (selectedItem) {
                           const newItem = {
-                            itemId: selectedItem.itemId,
-                            description: selectedItem.itemName,
+                            itemId: selectedItem.id,
+                            description: selectedItem.item_name,
                             quantity: parseInt(quantityInput.value),
                             unitPrice: parseFloat(priceInput.value)
                           };

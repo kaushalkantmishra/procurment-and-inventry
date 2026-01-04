@@ -64,7 +64,18 @@ export const Reports: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{
+      '--tooltip-bg': 'rgb(255 255 255 / 1)',
+      '--tooltip-border': 'rgb(229 231 235 / 1)',
+      '--tooltip-text': 'rgb(17 24 39 / 1)'
+    } as React.CSSProperties & Record<string, string>}>
+      <style>{`
+        .dark [style*="--tooltip-bg"] {
+          --tooltip-bg: rgb(31 41 55 / 1) !important;
+          --tooltip-border: rgb(75 85 99 / 1) !important;
+          --tooltip-text: rgb(243 244 246 / 1) !important;
+        }
+      `}</style>
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
@@ -94,14 +105,15 @@ export const Reports: React.FC = () => {
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={inventoryTrendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="month" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-300 dark:stroke-gray-600" />
+              <XAxis dataKey="month" className="fill-gray-600 dark:fill-gray-300" />
+              <YAxis className="fill-gray-600 dark:fill-gray-300" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #e5e7eb",
+                  backgroundColor: "var(--tooltip-bg)",
+                  border: "1px solid var(--tooltip-border)",
                   borderRadius: "8px",
+                  color: "var(--tooltip-text)"
                 }}
               />
               <Legend />
@@ -176,14 +188,15 @@ export const Reports: React.FC = () => {
           </div>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={vendorPerformance}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-300 dark:stroke-gray-600" />
+              <XAxis dataKey="name" className="fill-gray-600 dark:fill-gray-300" />
+              <YAxis className="fill-gray-600 dark:fill-gray-300" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#fff",
-                  border: "1px solid #e5e7eb",
+                  backgroundColor: "var(--tooltip-bg)",
+                  border: "1px solid var(--tooltip-border)",
                   borderRadius: "8px",
+                  color: "var(--tooltip-text)"
                 }}
               />
               <Legend />
