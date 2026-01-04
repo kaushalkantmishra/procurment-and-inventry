@@ -126,11 +126,16 @@ export const PurchaseOrders: React.FC = () => {
 
       {/* Data Table */}
       {!loading && !error && (
-        <DataTable
-          data={transformedPOs}
-          columns={columns}
-          searchPlaceholder="Search purchase orders by PO number, vendor..."
-        />
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Found {transformedPOs.length} purchase orders
+          </p>
+          <DataTable
+            data={transformedPOs}
+            columns={columns}
+            searchPlaceholder="Search purchase orders by PO number, vendor..."
+          />
+        </div>
       )}
 
       {/* Create PO Modal */}
@@ -307,7 +312,7 @@ export const PurchaseOrders: React.FC = () => {
         <Modal
           isOpen={!!viewingPO}
           onClose={() => setViewingPO(null)}
-          title={`Purchase Order ${viewingPO.poNumber}`}
+          title={`Purchase Order ${viewingPO.po_number}`}
           size="lg"
         >
           <div className="space-y-4">
@@ -351,44 +356,36 @@ export const PurchaseOrders: React.FC = () => {
                 Items
               </h4>
               <div className="space-y-2">
-                {viewingPO.items.map((item: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm"
-                  >
-                    <div>
+                {viewingPO.lines && viewingPO.lines.length > 0 ? (
+                  viewingPO.lines.map((item: any, index: number) => (
+                    <div
+                      key={index}
+                      className="flex justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                          {item.description || 'No description'}
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Qty: {item.quantity || 0} × ${parseFloat(item.unit_price || '0').toFixed(2)}
+                        </p>
+                      </div>
                       <p className="font-medium text-gray-900 dark:text-gray-100">
-                        {item.productName}
-                      </p>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Qty: {item.quantity} × ${item.unitPrice.toFixed(2)}
+                        ${parseFloat(item.line_total || '0').toFixed(2)}
                       </p>
                     </div>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">
-                      ${item.total.toFixed(2)}
-                    </p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">No items found</p>
+                )}
               </div>
             </div>
 
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Subtotal:
-                </span>
-                <span className="font-medium">
-                  ${viewingPO.subtotal.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Tax:</span>
-                <span className="font-medium">${viewingPO.tax.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-lg font-semibold border-t border-gray-200 dark:border-gray-700 pt-2">
-                <span>Total:</span>
+              <div className="flex justify-between text-lg font-semibold">
+                <span>Total Amount:</span>
                 <span className="text-primary-600">
-                  ${viewingPO.totalAmount.toFixed(2)}
+                  ${parseFloat(viewingPO.total_amount || '0').toFixed(2)}
                 </span>
               </div>
             </div>

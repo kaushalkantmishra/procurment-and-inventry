@@ -51,7 +51,7 @@ export const tblPurchaseOrders = pgTable("tbl_purchase_orders", {
     "0"
   ),
   status: varchar("status", { length: 20 }).default("Draft"),
-  terms_id: varchar("terms_id", { length: 50 }),
+  payment_terms: varchar("payment_terms", { length: 100 }), // e.g., "Net 30", "COD", "2/10 Net 30"
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow(),
   deleted_at: timestamp("deleted_at"),

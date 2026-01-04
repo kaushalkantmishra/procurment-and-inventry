@@ -3,7 +3,8 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 
 // Load from root .env file
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+// dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config();
 
 export default defineConfig({
     schema: './src/db/schema.ts',

@@ -29,6 +29,13 @@
       "when": 1766993452240,
       "tag": "0003_chunky_maverick",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1767513851791,
+      "tag": "0004_groovy_santa_claus",
+      "breakpoints": true
     }
   ]
 }

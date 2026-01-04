@@ -1,0 +1,1 @@
+ALTER TABLE "tbl_purchase_orders" RENAME COLUMN "terms_id" TO "payment_terms";
