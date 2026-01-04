@@ -7,7 +7,11 @@ import {
   tblVendors,
   users,
   tblModules,
-  tblUserModulePermissions
+  tblUserModulePermissions,
+  tblApprovalWorkflows,
+  tblApprovalLevels,
+  tblSystemEnums,
+  tblDocumentSequences
 } from './db/schema';
 import bcrypt from 'bcrypt';
 
@@ -21,16 +25,16 @@ async function seed() {
             {
                 name: 'Admin User',
                 email: 'admin@company.com',
-                password: hashedPassword,
+                password_hash: hashedPassword,
                 role: 'admin' as const,
-                isActive: true
+                is_active: true
             },
             {
                 name: 'Employee User',
                 email: 'employee@company.com', 
-                password: await bcrypt.hash('employee123', 10),
+                password_hash: await bcrypt.hash('employee123', 10),
                 role: 'employee' as const,
-                isActive: true
+                is_active: true
             }
         ];
 
@@ -249,6 +253,72 @@ async function seed() {
 
         await db.insert(tblVendors).values(vendorData).onConflictDoNothing();
         console.log('Vendors seeded');
+
+        // Seed Approval Workflows
+        const workflowData = [
+            {
+                workflow_code: "PO_APPROVAL",
+                workflow_name: "Purchase Order Approval",
+                document_type: "PO",
+                is_active: true,
+            },
+            {
+                workflow_code: "PR_APPROVAL", 
+                workflow_name: "Purchase Request Approval",
+                document_type: "PR",
+                is_active: true,
+            },
+            {
+                workflow_code: "INVOICE_APPROVAL",
+                workflow_name: "Invoice Approval",
+                document_type: "INVOICE", 
+                is_active: true,
+            }
+        ];
+
+        const insertedWorkflows = await db.insert(tblApprovalWorkflows).values(workflowData).onConflictDoNothing().returning();
+        console.log('Approval workflows seeded');
+
+        // Seed Approval Levels
+        if (insertedWorkflows.length > 0) {
+            const levelData = [
+                { workflow_id: insertedWorkflows[0].id, level_sequence: 1, approver_role: "supervisor", min_amount: "0", max_amount: "10000", is_mandatory: true },
+                { workflow_id: insertedWorkflows[0].id, level_sequence: 2, approver_role: "manager", min_amount: "10000", max_amount: "50000", is_mandatory: true },
+                { workflow_id: insertedWorkflows[0].id, level_sequence: 3, approver_role: "director", min_amount: "50000", max_amount: null, is_mandatory: true },
+            ];
+
+            await db.insert(tblApprovalLevels).values(levelData).onConflictDoNothing();
+            console.log('Approval levels seeded');
+        }
+
+        // Seed System Enums
+        const enumData = [
+            { enum_type: "DOCUMENT_STATUS", enum_key: "DRAFT", enum_value: "Draft", display_order: 1 },
+            { enum_type: "DOCUMENT_STATUS", enum_key: "PENDING", enum_value: "Pending Approval", display_order: 2 },
+            { enum_type: "DOCUMENT_STATUS", enum_key: "APPROVED", enum_value: "Approved", display_order: 3 },
+            { enum_type: "DOCUMENT_STATUS", enum_key: "REJECTED", enum_value: "Rejected", display_order: 4 },
+            { enum_type: "PAYMENT_STATUS", enum_key: "PENDING", enum_value: "Pending", display_order: 1 },
+            { enum_type: "PAYMENT_STATUS", enum_key: "PAID", enum_value: "Paid", display_order: 2 },
+            { enum_type: "PAYMENT_STATUS", enum_key: "OVERDUE", enum_value: "Overdue", display_order: 3 },
+            { enum_type: "MATCH_STATUS", enum_key: "UNMATCHED", enum_value: "Unmatched", display_order: 1 },
+            { enum_type: "MATCH_STATUS", enum_key: "MATCHED", enum_value: "Matched", display_order: 2 },
+            { enum_type: "MATCH_STATUS", enum_key: "VARIANCE", enum_value: "Variance", display_order: 3 },
+        ];
+
+        await db.insert(tblSystemEnums).values(enumData).onConflictDoNothing();
+        console.log('System enums seeded');
+
+        // Seed Document Sequences
+        const sequenceData = [
+            { document_type: "PO", current_number: 1, prefix: "PO-", suffix: "" },
+            { document_type: "PR", current_number: 1, prefix: "PR-", suffix: "" },
+            { document_type: "GRN", current_number: 1, prefix: "GRN-", suffix: "" },
+            { document_type: "INV", current_number: 1, prefix: "INV-", suffix: "" },
+            { document_type: "MI", current_number: 1, prefix: "MI-", suffix: "" },
+        ];
+
+        await db.insert(tblDocumentSequences).values(sequenceData).onConflictDoNothing();
+        console.log('Document sequences seeded');
 
         console.log('Database seeded successfully!');
         console.log('\nLogin credentials:');

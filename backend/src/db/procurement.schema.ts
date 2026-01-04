@@ -8,11 +8,15 @@ import {
   date,
   timestamp,
   varchar,
+  uuid,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // Import from inventory for references
 import { tblItems } from "./inventory.schema";
+// Import from masters for references
+import { tblUsers } from "./masters.schema";
 
 // --- Purchase Request (PR) ---
 export const tblPurchaseRequests = pgTable("tbl_purchase_requests", {
@@ -136,6 +140,60 @@ export const tblGrnDetails = pgTable("tbl_grn_details", {
   updated_at: timestamp("updated_at").defaultNow(),
   deleted_at: timestamp("deleted_at"),
   is_deleted: boolean("is_deleted").default(false),
+}, (table) => ({
+  uniqueGrnPoLine: unique().on(table.grn_id, table.po_line_id),
+}));
+
+// --- Vendor Invoices ---
+export const tblVendorInvoices = pgTable("tbl_vendor_invoices", {
+  id: serial("id").primaryKey(),
+  invoice_number: varchar("invoice_number", { length: 50 }).notNull().unique(),
+  vendor_invoice_number: varchar("vendor_invoice_number", { length: 50 }).notNull(),
+  vendor_id: varchar("vendor_id", { length: 50 }).notNull(),
+  po_id: integer("po_id").references(() => tblPurchaseOrders.id),
+  invoice_date: date("invoice_date").notNull(),
+  due_date: date("due_date"),
+  currency: varchar("currency", { length: 10 }).default("USD"),
+  subtotal: decimal("subtotal", { precision: 15, scale: 2 }).notNull(),
+  tax_amount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0"),
+  total_amount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  payment_status: varchar("payment_status", { length: 20 }).default("PENDING"),
+  match_status: varchar("match_status", { length: 20 }).default("UNMATCHED"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
+  deleted_at: timestamp("deleted_at"),
+  is_deleted: boolean("is_deleted").default(false),
+});
+
+export const tblInvoiceLines = pgTable("tbl_invoice_lines", {
+  id: serial("id").primaryKey(),
+  invoice_id: integer("invoice_id").references(() => tblVendorInvoices.id).notNull(),
+  po_line_id: integer("po_line_id").references(() => tblPoLines.id),
+  item_id: integer("item_id").references(() => tblItems.id).notNull(),
+  description: text("description"),
+  quantity: integer("quantity").notNull(),
+  unit_price: decimal("unit_price", { precision: 15, scale: 2 }).notNull(),
+  line_total: decimal("line_total", { precision: 15, scale: 2 }).notNull(),
+  match_status: varchar("match_status", { length: 20 }).default("UNMATCHED"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
+  deleted_at: timestamp("deleted_at"),
+  is_deleted: boolean("is_deleted").default(false),
+});
+
+export const tblThreeWayMatching = pgTable("tbl_three_way_matching", {
+  id: serial("id").primaryKey(),
+  po_line_id: integer("po_line_id").references(() => tblPoLines.id).notNull(),
+  grn_detail_id: integer("grn_detail_id").references(() => tblGrnDetails.id),
+  invoice_line_id: integer("invoice_line_id").references(() => tblInvoiceLines.id),
+  match_status: varchar("match_status", { length: 20 }).default("PENDING"),
+  quantity_variance: integer("quantity_variance").default(0),
+  price_variance: decimal("price_variance", { precision: 15, scale: 2 }).default("0"),
+  variance_reason: text("variance_reason"),
+  matched_by: uuid("matched_by").references(() => tblUsers.id),
+  matched_at: timestamp("matched_at"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 export const purchaseRequestsRelations = relations(

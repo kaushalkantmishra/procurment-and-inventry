@@ -22,6 +22,13 @@ import { poLineRoutes } from '../modules/procurement/routes/poLine.routes';
 import { grnHeaderRoutes } from '../modules/procurement/routes/grnHeader.routes';
 import { grnDetailRoutes } from '../modules/procurement/routes/grnDetail.routes';
 import { purchaseRequestRoutes } from '../modules/procurement/routes/purchaseRequest.routes';
+import { vendorInvoiceRoutes } from '../modules/procurement/routes/vendorInvoice.routes';
+
+// Extended Modules
+import { approvalWorkflowRoutes } from '../modules/masters/routes/approvalWorkflow.routes';
+import { documentAttachmentRoutes } from '../modules/masters/routes/documentAttachment.routes';
+import { stockBalanceRoutes } from '../modules/inventory/routes/stockBalance.routes';
+import { materialIssueRoutes } from '../modules/inventory/routes/materialIssue.routes';
 
 const router = Router();
 
@@ -47,5 +54,12 @@ router.use('/po-lines', poLineRoutes);
 router.use('/grn-headers', grnHeaderRoutes);
 router.use('/grn-details', grnDetailRoutes);
 router.use('/purchase-requests', purchaseRequestRoutes);
+router.use('/vendor-invoices', vendorInvoiceRoutes);
+
+// Extended Routes
+router.use('/approvals', approvalWorkflowRoutes);
+router.use('/attachments', documentAttachmentRoutes);
+router.use('/stock-balances', stockBalanceRoutes);
+router.use('/material-issues', materialIssueRoutes);
 
 export { router as apiRoutes };

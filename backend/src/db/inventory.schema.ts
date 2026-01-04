@@ -8,11 +8,12 @@ import {
   date,
   timestamp,
   varchar,
+   uuid,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // Import from masters for references
-import { tblCategories, tblUnits, tblWarehouses } from "./masters.schema";
+import { tblCategories, tblUnits, tblWarehouses, tblUsers } from "./masters.schema";
 
 // --- Product Master / Item Master ---
 export const tblItems = pgTable("tbl_items", {
@@ -130,6 +131,55 @@ export const tblPayments = pgTable("tbl_payments", {
   change_given: decimal("change_given", { precision: 15, scale: 2 }),
   reference_number: varchar("reference_number", { length: 50 }),
   status: integer("status").default(1),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
+  deleted_at: timestamp("deleted_at"),
+  is_deleted: boolean("is_deleted").default(false),
+});
+
+// --- Stock Balances ---
+export const tblStockBalances = pgTable("tbl_stock_balances", {
+  id: serial("id").primaryKey(),
+  item_id: integer("item_id").references(() => tblItems.id).notNull(),
+  warehouse_id: integer("warehouse_id").references(() => tblWarehouses.id).notNull(),
+  available_quantity: integer("available_quantity").default(0),
+  reserved_quantity: integer("reserved_quantity").default(0),
+  on_order_quantity: integer("on_order_quantity").default(0),
+  last_transaction_id: integer("last_transaction_id").references(() => tblInventoryTransactions.id),
+  last_updated: timestamp("last_updated").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// --- Material Issues ---
+export const tblMaterialIssues = pgTable("tbl_material_issues", {
+  id: serial("id").primaryKey(),
+  issue_number: varchar("issue_number", { length: 50 }).notNull().unique(),
+  issue_type: varchar("issue_type", { length: 20 }).notNull(),
+  from_warehouse_id: integer("from_warehouse_id").references(() => tblWarehouses.id).notNull(),
+  to_warehouse_id: integer("to_warehouse_id").references(() => tblWarehouses.id),
+  department: varchar("department", { length: 100 }),
+  project_code: varchar("project_code", { length: 50 }),
+  requested_by: uuid("requested_by").references(() => tblUsers.id).notNull(),
+  issued_by: uuid("issued_by").references(() => tblUsers.id),
+  issue_date: timestamp("issue_date").defaultNow().notNull(),
+  status: varchar("status", { length: 20 }).default("DRAFT"),
+  remarks: text("remarks"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
+  deleted_at: timestamp("deleted_at"),
+  is_deleted: boolean("is_deleted").default(false),
+});
+
+export const tblMaterialIssueLines = pgTable("tbl_material_issue_lines", {
+  id: serial("id").primaryKey(),
+  issue_id: integer("issue_id").references(() => tblMaterialIssues.id).notNull(),
+  item_id: integer("item_id").references(() => tblItems.id).notNull(),
+  requested_quantity: integer("requested_quantity").notNull(),
+  issued_quantity: integer("issued_quantity").default(0),
+  unit_cost: decimal("unit_cost", { precision: 15, scale: 2 }),
+  line_total: decimal("line_total", { precision: 15, scale: 2 }),
+  remarks: text("remarks"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow(),
   deleted_at: timestamp("deleted_at"),
