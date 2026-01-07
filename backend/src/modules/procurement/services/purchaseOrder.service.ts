@@ -2,6 +2,14 @@ import { db } from "../../../db";
 import { tblPurchaseOrders, tblPoLines, tblPurchaseRequests, tblPurchaseRequestLines } from "../../../db/procurement.schema";
 import { eq, and } from "drizzle-orm";
 import { DocumentStatusHistoryService } from './documentStatusHistory.service';
+import { 
+  CreatePurchaseOrderRequest, 
+  UpdatePurchaseOrderRequest, 
+  CreatePRToPORequest,
+  SubmitForApprovalRequest,
+  ApproveRequest,
+  RejectRequest
+} from '../types';
 
 const statusHistoryService = new DocumentStatusHistoryService();
 
@@ -26,15 +34,20 @@ export class PurchaseOrderService {
     return po;
   }
 
-  async create(data: any) {
-    const { lines, ...poData } = data;
+  async create(request: CreatePurchaseOrderRequest) {
+    const { lines, po_number, supplier_id, buyer_id, payment_terms } = request;
     
     // Create the PO first
-    const [po] = await db.insert(tblPurchaseOrders).values(poData).returning();
+    const [po] = await db.insert(tblPurchaseOrders).values({
+      po_number,
+      supplier_id,
+      buyer_id,
+      payment_terms
+    }).returning();
     
     // Create PO lines if provided
     if (lines && lines.length > 0) {
-      const poLines = lines.map((line: any) => ({
+      const poLines = lines.map((line) => ({
         ...line,
         po_id: po.id
       }));
@@ -44,17 +57,27 @@ export class PurchaseOrderService {
     return po;
   }
 
-  async update(id: number, data: any) {
+  async update(id: number, request: UpdatePurchaseOrderRequest) {
+    const { supplier_id, buyer_id, payment_terms, status } = request;
+    
     const [po] = await db
       .update(tblPurchaseOrders)
-      .set({ ...data, updated_at: new Date() })
+      .set({ 
+        supplier_id,
+        buyer_id,
+        payment_terms,
+        status,
+        updated_at: new Date() 
+      })
       .where(eq(tblPurchaseOrders.id, id))
       .returning();
     if (!po) throw new Error("Purchase order not found");
     return po;
   }
 
-  async submitForApproval(id: number, submittedBy: string) {
+  async submitForApproval(id: number, request: SubmitForApprovalRequest) {
+    const { submittedBy } = request;
+    
     const [po] = await db.select().from(tblPurchaseOrders).where(eq(tblPurchaseOrders.id, id));
     if (!po) throw new Error('Purchase order not found');
     
@@ -78,7 +101,9 @@ export class PurchaseOrderService {
     };
   }
 
-  async approve(id: number, approvedBy: string) {
+  async approve(id: number, request: ApproveRequest) {
+    const { approvedBy } = request;
+    
     const [po] = await db.select().from(tblPurchaseOrders).where(eq(tblPurchaseOrders.id, id));
     if (!po) throw new Error('Purchase order not found');
     
@@ -95,7 +120,9 @@ export class PurchaseOrderService {
     return { message: 'Purchase order approved successfully' };
   }
 
-  async reject(id: number, rejectedBy: string, reason: string) {
+  async reject(id: number, request: RejectRequest) {
+    const { rejectedBy, reason } = request;
+    
     const [po] = await db.select().from(tblPurchaseOrders).where(eq(tblPurchaseOrders.id, id));
     if (!po) throw new Error('Purchase order not found');
     
@@ -112,7 +139,8 @@ export class PurchaseOrderService {
     return { message: 'Purchase order rejected successfully' };
   }
 
-  async createFromPR(prId: number, createdBy: string) {
+  async createFromPR(prId: number, request: CreatePRToPORequest) {
+    const { createdBy } = request;
     return await db.transaction(async (tx) => {
       // Validate PR exists and status = Approved
       const [pr] = await tx.select().from(tblPurchaseRequests).where(eq(tblPurchaseRequests.id, prId));

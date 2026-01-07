@@ -1,6 +1,7 @@
 import { db } from '../../../db';
 import { tblThreeWayMatching, tblPoLines, tblGrnDetails } from '../../../db/procurement.schema';
 import { eq } from 'drizzle-orm';
+import { CreateThreeWayMatchingRequest, UpdateThreeWayMatchingRequest } from '../types';
 
 export class ThreeWayMatchingService {
   async getAll() {
@@ -12,8 +13,28 @@ export class ThreeWayMatchingService {
     return result[0];
   }
 
-  async create(data: any) {
-    const result = await db.insert(tblThreeWayMatching).values(data).returning();
+  async create(request: CreateThreeWayMatchingRequest) {
+    const {
+      po_line_id,
+      grn_detail_id,
+      invoice_line_id,
+      match_status,
+      quantity_variance,
+      price_variance,
+      variance_reason,
+      matched_by
+    } = request;
+    
+    const result = await db.insert(tblThreeWayMatching).values({
+      po_line_id,
+      grn_detail_id,
+      invoice_line_id,
+      match_status,
+      quantity_variance,
+      price_variance,
+      variance_reason,
+      matched_by
+    }).returning();
     return result[0];
   }
 
@@ -52,9 +73,24 @@ export class ThreeWayMatchingService {
     return result[0];
   }
 
-  async update(id: number, data: any) {
+  async update(id: number, request: UpdateThreeWayMatchingRequest) {
+    const {
+      match_status,
+      quantity_variance,
+      price_variance,
+      variance_reason,
+      matched_by
+    } = request;
+    
     const result = await db.update(tblThreeWayMatching)
-      .set({ ...data, updated_at: new Date() })
+      .set({ 
+        match_status,
+        quantity_variance,
+        price_variance,
+        variance_reason,
+        matched_by,
+        updated_at: new Date() 
+      })
       .where(eq(tblThreeWayMatching.id, id))
       .returning();
     return result[0];

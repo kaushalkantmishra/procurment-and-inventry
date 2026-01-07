@@ -16,26 +16,51 @@ export class PurchaseOrderController {
       return ApiResponse.success(
         res,
         purchaseOrders,
-        "Purchase orders retrieved successfully"
+        "Purchase orders retrieved successfully",
+        200,
+        "purchase-orders-get-all",
+        req
       );
     } catch (error) {
-      return ApiResponse.error(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.error(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        500,
+        "purchase-orders-get-all",
+        req
+      );
     }
   };
 
   getById = async (req: Request, res: Response) => {
     try {
-      const purchaseOrder = await this.purchaseOrderService.getById(parseInt(req.params.id));
+      const purchaseOrder = await this.purchaseOrderService.getById(
+        parseInt(req.params.id)
+      );
       if (!purchaseOrder) {
-        return ApiResponse.notFound(res, "Purchase order not found");
+        return ApiResponse.notFound(
+          res,
+          "Purchase order not found",
+          "purchase-orders-get-by-id",
+          req
+        );
       }
       return ApiResponse.success(
         res,
         purchaseOrder,
-        "Purchase order retrieved successfully"
+        "Purchase order retrieved successfully",
+        200,
+        "purchase-orders-get-by-id",
+        req
       );
     } catch (error) {
-      return ApiResponse.error(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.error(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        500,
+        "purchase-orders-get-by-id",
+        req
+      );
     }
   };
 
@@ -45,10 +70,17 @@ export class PurchaseOrderController {
       return ApiResponse.created(
         res,
         purchaseOrder,
-        "Purchase order created successfully"
+        "Purchase order created successfully",
+        "purchase-orders-create",
+        req
       );
     } catch (error) {
-      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.badRequest(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        "purchase-orders-create",
+        req
+      );
     }
   };
 
@@ -61,10 +93,18 @@ export class PurchaseOrderController {
       return ApiResponse.success(
         res,
         purchaseOrder,
-        "Purchase order updated successfully"
+        "Purchase order updated successfully",
+        200,
+        "purchase-orders-update",
+        req
       );
     } catch (error) {
-      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.badRequest(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        "purchase-orders-update",
+        req
+      );
     }
   };
 
@@ -72,15 +112,23 @@ export class PurchaseOrderController {
     try {
       const result = await this.purchaseOrderService.submitForApproval(
         parseInt(req.params.id),
-        req.body.submittedBy || 'ADMIN'
+        { submittedBy: req.body.submittedBy || "ADMIN" }
       );
       return ApiResponse.success(
         res,
         result,
-        "Purchase order submitted for approval successfully"
+        "Purchase order submitted for approval successfully",
+        200,
+        "purchase-orders-submit-approval",
+        req
       );
     } catch (error) {
-      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.badRequest(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        "purchase-orders-submit-approval",
+        req
+      );
     }
   };
 
@@ -88,15 +136,23 @@ export class PurchaseOrderController {
     try {
       const result = await this.purchaseOrderService.approve(
         parseInt(req.params.id),
-        req.body.approvedBy || 'ADMIN'
+        { approvedBy: req.body.approvedBy || "ADMIN" }
       );
       return ApiResponse.success(
         res,
         result,
-        "Purchase order approved successfully"
+        "Purchase order approved successfully",
+        200,
+        "purchase-orders-approve",
+        req
       );
     } catch (error) {
-      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.badRequest(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        "purchase-orders-approve",
+        req
+      );
     }
   };
 
@@ -104,25 +160,47 @@ export class PurchaseOrderController {
     try {
       const result = await this.purchaseOrderService.reject(
         parseInt(req.params.id),
-        req.body.rejectedBy || 'ADMIN',
-        req.body.reason || 'No reason provided'
+        {
+          rejectedBy: req.body.rejectedBy || "ADMIN",
+          reason: req.body.reason || "No reason provided",
+        }
       );
       return ApiResponse.success(
         res,
         result,
-        "Purchase order rejected successfully"
+        "Purchase order rejected successfully",
+        200,
+        "purchase-orders-reject",
+        req
       );
     } catch (error) {
-      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.badRequest(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        "purchase-orders-reject",
+        req
+      );
     }
   };
 
   delete = async (req: Request, res: Response) => {
     try {
       await this.purchaseOrderService.delete(parseInt(req.params.id));
-      return ApiResponse.success(res, null, "Purchase order deleted successfully");
+      return ApiResponse.success(
+        res,
+        null,
+        "Purchase order deleted successfully",
+        200,
+        "purchase-orders-delete",
+        req
+      );
     } catch (error) {
-      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.badRequest(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        "purchase-orders-delete",
+        req
+      );
     }
   };
 
@@ -130,15 +208,22 @@ export class PurchaseOrderController {
     try {
       const result = await this.purchaseOrderService.createFromPR(
         parseInt(req.params.prId),
-        req.body.createdBy || 'ADMIN'
+        { createdBy: req.body.createdBy || "ADMIN" }
       );
       return ApiResponse.created(
         res,
         result,
-        "Purchase Request converted to Purchase Order successfully"
+        "Purchase Request converted to Purchase Order successfully",
+        "purchase-orders-create-from-pr",
+        req
       );
     } catch (error) {
-      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.badRequest(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        "purchase-orders-create-from-pr",
+        req
+      );
     }
   };
 }

@@ -2,12 +2,13 @@ import { Router } from 'express';
 import { ThreeWayMatchingController } from '../controllers/threeWayMatching.controller';
 
 const router = Router();
+const controller = new ThreeWayMatchingController();
 
-router.get('/', ThreeWayMatchingController.getAll);
-router.get('/:id', ThreeWayMatchingController.getById);
-router.post('/', ThreeWayMatchingController.create);
-router.post('/auto-match', ThreeWayMatchingController.createAutomaticMatch);
-router.put('/:id', ThreeWayMatchingController.update);
-router.delete('/:id', ThreeWayMatchingController.delete);
+router.get('/', controller.getAll);
+router.get('/:id', controller.getById);
+router.post('/', controller.create);
+router.post('/auto-match', controller.createAutomaticMatch);
+router.put('/:id', controller.update);
+router.delete('/:id', controller.delete);
 
 export { router as threeWayMatchingRoutes };

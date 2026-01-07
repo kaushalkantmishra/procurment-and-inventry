@@ -1,7 +1,7 @@
 import { db } from "../../../db";
 import { tblVendorInvoices, tblInvoiceLines, tblThreeWayMatching, tblPoLines, tblGrnDetails } from "../../../db/procurement.schema";
 import { eq, and } from "drizzle-orm";
-import { NUMBER_PREFIXES, MATCH_STATUS, PAYMENT_STATUS, ERROR_MESSAGES, VARIANCE_THRESHOLDS } from "../../../constants";
+import { CreateVendorInvoiceRequest, UpdateVendorInvoiceRequest } from '../types';
 
 export class VendorInvoiceService {
   async getAll() {
@@ -15,15 +15,37 @@ export class VendorInvoiceService {
     return invoice;
   }
 
-  async create(data: any) {
+  async create(request: CreateVendorInvoiceRequest & { lines?: any[] }) {
+    const {
+      lines,
+      invoice_number,
+      vendor_invoice_number,
+      vendor_id,
+      po_id,
+      invoice_date,
+      due_date,
+      currency,
+      subtotal,
+      tax_amount,
+      total_amount
+    } = request;
+    
     const [invoice] = await db.insert(tblVendorInvoices).values({
-      invoice_number: `${NUMBER_PREFIXES.INVOICE}-${Date.now()}`,
-      ...data
+      invoice_number: invoice_number || `INV-${Date.now()}`,
+      vendor_invoice_number,
+      vendor_id,
+      po_id,
+      invoice_date: new Date(invoice_date),
+      due_date: due_date ? new Date(due_date) : undefined,
+      currency,
+      subtotal,
+      tax_amount,
+      total_amount
     }).returning();
 
-    if (data.lines) {
+    if (lines && lines.length > 0) {
       await db.insert(tblInvoiceLines).values(
-        data.lines.map((line: any) => ({
+        lines.map((line: any) => ({
           invoice_id: invoice.id,
           ...line
         }))
@@ -79,9 +101,36 @@ export class VendorInvoiceService {
     });
   }
 
-  async update(id: number, data: any) {
+  async update(id: number, request: UpdateVendorInvoiceRequest) {
+    const {
+      vendor_invoice_number,
+      vendor_id,
+      po_id,
+      invoice_date,
+      due_date,
+      currency,
+      subtotal,
+      tax_amount,
+      total_amount,
+      payment_status,
+      match_status
+    } = request;
+    
     const [invoice] = await db.update(tblVendorInvoices)
-      .set({ ...data, updated_at: new Date() })
+      .set({ 
+        vendor_invoice_number,
+        vendor_id,
+        po_id,
+        invoice_date: invoice_date ? new Date(invoice_date) : undefined,
+        due_date: due_date ? new Date(due_date) : undefined,
+        currency,
+        subtotal,
+        tax_amount,
+        total_amount,
+        payment_status,
+        match_status,
+        updated_at: new Date() 
+      })
       .where(eq(tblVendorInvoices.id, id))
       .returning();
     return invoice;
@@ -98,29 +147,29 @@ export class VendorInvoiceService {
   async validatePayment(invoiceId: number): Promise<{ canPay: boolean; reason?: string }> {
     const invoice = await this.getById(invoiceId);
     if (!invoice) {
-      return { canPay: false, reason: ERROR_MESSAGES.INVOICE_NOT_FOUND };
+      return { canPay: false, reason: 'Invoice not found' };
     }
 
-    if (invoice.payment_status === PAYMENT_STATUS.PAID) {
-      return { canPay: false, reason: ERROR_MESSAGES.INVOICE_ALREADY_PAID };
+    if (invoice.payment_status === 'PAID') {
+      return { canPay: false, reason: 'Invoice already paid' };
     }
 
-    if (invoice.match_status === MATCH_STATUS.UNMATCHED) {
-      return { canPay: false, reason: ERROR_MESSAGES.INVOICE_NOT_MATCHED };
+    if (invoice.match_status === 'UNMATCHED') {
+      return { canPay: false, reason: 'Invoice not matched' };
     }
 
-    if (invoice.match_status === MATCH_STATUS.VARIANCE) {
+    if (invoice.match_status === 'VARIANCE') {
       // Check if variances are within acceptable limits or approved
       const variances = await db.select().from(tblThreeWayMatching)
         .where(eq(tblThreeWayMatching.invoice_line_id, invoiceId));
       
       const hasSignificantVariance = variances.some(v => 
-        Math.abs(v.quantity_variance ?? 0) > VARIANCE_THRESHOLDS.QUANTITY_TOLERANCE || 
-        Math.abs(parseFloat(v.price_variance ?? '0')) > VARIANCE_THRESHOLDS.PRICE_TOLERANCE
+        Math.abs(v.quantity_variance ?? 0) > 5 || 
+        Math.abs(parseFloat(v.price_variance ?? '0')) > 0.1
       );
       
       if (hasSignificantVariance) {
-        return { canPay: false, reason: ERROR_MESSAGES.INVOICE_HAS_VARIANCES };
+        return { canPay: false, reason: 'Invoice has significant variances' };
       }
     }
 
@@ -135,7 +184,7 @@ export class VendorInvoiceService {
 
     const [updated] = await db.update(tblVendorInvoices)
       .set({ 
-        payment_status: PAYMENT_STATUS.PAID, 
+        payment_status: 'PAID', 
         updated_at: new Date()
       })
       .where(eq(tblVendorInvoices.id, invoiceId))

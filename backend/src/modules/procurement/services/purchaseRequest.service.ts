@@ -1,6 +1,7 @@
 import { db } from "../../../db/index";
-import { tblPurchaseRequests } from "../../../db/schema";
+import { tblPurchaseRequests } from '../../../db/procurement.schema';
 import { eq, and } from "drizzle-orm";
+import { CreatePurchaseRequestRequest, UpdatePurchaseRequestRequest } from '../types';
 
 export class PurchaseRequestService {
   async getAll() {
@@ -23,15 +24,46 @@ export class PurchaseRequestService {
     return pr;
   }
 
-  async create(data: any) {
-    const [pr] = await db.insert(tblPurchaseRequests).values(data).returning();
+  async create(request: CreatePurchaseRequestRequest) {
+    const {
+      requesting_department,
+      requester_employee_code,
+      required_date,
+      justification,
+      maintenance_work_order
+    } = request;
+    
+    const [pr] = await db.insert(tblPurchaseRequests).values({
+      requesting_department,
+      requester_employee_code,
+      required_date: required_date ? new Date(required_date) : undefined,
+      justification,
+      maintenance_work_order
+    }).returning();
     return pr;
   }
 
-  async update(id: number, data: any) {
+  async update(id: number, request: UpdatePurchaseRequestRequest) {
+    const {
+      requesting_department,
+      requester_employee_code,
+      required_date,
+      justification,
+      maintenance_work_order,
+      status
+    } = request;
+    
     const [pr] = await db
       .update(tblPurchaseRequests)
-      .set({ ...data, updated_at: new Date() })
+      .set({ 
+        requesting_department,
+        requester_employee_code,
+        required_date: required_date ? new Date(required_date) : undefined,
+        justification,
+        maintenance_work_order,
+        status,
+        updated_at: new Date() 
+      })
       .where(eq(tblPurchaseRequests.id, id))
       .returning();
     if (!pr) throw new Error("Purchase request not found");

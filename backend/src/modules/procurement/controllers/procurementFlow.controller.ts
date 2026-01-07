@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
-import { ProcurementFlowService } from '../services/procurementFlow.service';
+import { Request, Response } from "express";
+import { ProcurementFlowService } from "../services/procurementFlow.service";
+import { ApiResponse } from "../../../utils/response.util";
 
 export class ProcurementFlowController {
   private service: ProcurementFlowService;
@@ -11,18 +12,28 @@ export class ProcurementFlowController {
   getFlowByPoId = async (req: Request, res: Response) => {
     try {
       const poId = parseInt(req.params.poId);
-      
+
       if (!poId) {
-        return res.status(400).json({ error: 'Invalid PO ID' });
+        return ApiResponse.badRequest(
+          res,
+          "Invalid PO ID",
+          "procurement-flow-get"
+        );
       }
 
       const flow = await this.service.getFlowByPoId(poId);
-      res.json(flow);
+      return ApiResponse.success(
+        res,
+        flow,
+        "Procurement flow retrieved successfully",
+        200,
+        "procurement-flow-get"
+      );
     } catch (error: any) {
-      if (error.message.includes('not found')) {
-        return res.status(404).json({ error: error.message });
+      if (error.message.includes("not found")) {
+        return ApiResponse.notFound(res, error.message, "procurement-flow-get");
       }
-      res.status(500).json({ error: error.message });
+      return ApiResponse.error(res, error.message, 500, "procurement-flow-get");
     }
   };
 }

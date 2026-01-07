@@ -1,7 +1,8 @@
 import { db } from "../../../db/index";
-import { tblGrnHeaders, tblGrnDetails, tblPoLines } from "../../../db/schema";
+import { tblGrnHeaders, tblGrnDetails, tblPoLines } from "../../../db/procurement.schema";
 import { eq, and } from "drizzle-orm";
 import { InventoryTransactionService } from "../../inventory/services/inventoryTransaction.service";
+import { CreateGrnHeaderRequest, UpdateGrnHeaderRequest } from '../types';
 
 export class GRNHeaderService {
   async getAll() {
@@ -21,16 +22,22 @@ export class GRNHeaderService {
     return grn;
   }
 
-  async create(data: any) {
-    const { details, ...grnData } = data;
+  async create(request: CreateGrnHeaderRequest & { details?: any[] }) {
+    const { details, grn_number, po_id, supplier_id, delivery_note_ref, vehicle_reg_no, received_by_user, inspection_status, remarks } = request;
     
     return await db.transaction(async (tx) => {
       try {
         // Create GRN header
         const [grn] = await tx.insert(tblGrnHeaders).values({
-          ...grnData,
-          receipt_date: new Date(),
-          inspection_status: 'Pending'
+          grn_number,
+          po_id,
+          supplier_id,
+          delivery_note_ref,
+          vehicle_reg_no,
+          received_by_user,
+          inspection_status: inspection_status || 'Pending',
+          remarks,
+          receipt_date: new Date()
         }).returning();
         
         // Create GRN details if provided
@@ -49,10 +56,21 @@ export class GRNHeaderService {
     });
   }
 
-  async update(id: number, data: any) {
+  async update(id: number, request: UpdateGrnHeaderRequest) {
+    const { supplier_id, delivery_note_ref, vehicle_reg_no, received_by_user, inspection_status, remarks, status } = request;
+    
     const [grn] = await db
       .update(tblGrnHeaders)
-      .set({ ...data, updated_at: new Date() })
+      .set({ 
+        supplier_id,
+        delivery_note_ref,
+        vehicle_reg_no,
+        received_by_user,
+        inspection_status,
+        remarks,
+        status,
+        updated_at: new Date() 
+      })
       .where(eq(tblGrnHeaders.id, id))
       .returning();
     if (!grn) throw new Error("GRN header not found");

@@ -1,6 +1,7 @@
 import { db } from '../../../db';
 import { tblDocumentAttachments } from '../../../db/masters.schema';
 import { eq, and } from 'drizzle-orm';
+import { CreateDocumentAttachmentRequest } from '../types';
 
 export class DocumentAttachmentService {
   async getByDocument(documentType: string, documentId: number) {
@@ -16,19 +17,21 @@ export class DocumentAttachmentService {
       );
   }
 
-  async create(data: {
-    document_type: string;
-    document_id: number;
-    file_name: string;
-    original_name: string;
-    file_path: string;
-    file_size: number;
-    mime_type: string;
-    uploaded_by: string;
-  }) {
+  async create(request: CreateDocumentAttachmentRequest) {
+    const {
+      document_type,
+      document_id,
+      file_name,
+      original_name,
+      file_path,
+      file_size,
+      mime_type,
+      uploaded_by
+    } = request;
+    
     // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-    if (data.file_size > maxSize) {
+    if (file_size > maxSize) {
       throw new Error('File size exceeds maximum limit of 10MB');
     }
 
@@ -43,13 +46,22 @@ export class DocumentAttachmentService {
       'image/webp'
     ];
     
-    if (!allowedTypes.includes(data.mime_type.toLowerCase())) {
+    if (!allowedTypes.includes(mime_type.toLowerCase())) {
       throw new Error('File type not supported. Only PDF and image files are allowed');
     }
 
     const [attachment] = await db
       .insert(tblDocumentAttachments)
-      .values(data)
+      .values({
+        document_type,
+        document_id,
+        file_name,
+        original_name,
+        file_path,
+        file_size,
+        mime_type,
+        uploaded_by
+      })
       .returning();
     
     return attachment;
