@@ -18,7 +18,7 @@ import { relations } from "drizzle-orm";
    ============================================================ */
 
 import { tblItems } from "./inventory.schema";
-import { tblUsers } from "./masters.schema";
+import { tblUsers } from "./auth.schema";
 
 /* ============================================================
    PURCHASE REQUEST (PR)

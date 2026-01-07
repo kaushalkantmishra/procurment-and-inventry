@@ -13,7 +13,8 @@ import {
 import { relations } from "drizzle-orm";
 
 // Import from masters for references
-import { tblCategories, tblUnits, tblWarehouses, tblUsers } from "./masters.schema";
+import { tblCategories, tblUnits, tblWarehouses} from "./masters.schema";
+import { tblUsers } from "./auth.schema";
 
 // --- Product Master / Item Master ---
 export const tblItems = pgTable("tbl_items", {

@@ -1,12 +1,10 @@
 import { db } from "../../../db/index";
-import { tblUsers } from "../../../db/schema";
-import { eq } from "drizzle-orm";
+import { tblUsers, tblRoles, tblUserRoles } from "../../../db/schema";
+import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export class AuthService {
-  private currentUser: any = null;
-
   async login(credentials: any) {
     const { email, password } = credentials;
 
@@ -14,35 +12,67 @@ export class AuthService {
       throw new Error("Email and password are required");
     }
 
-    const [user] = await db
-      .select()
+    const userWithRoles = await db
+      .select({
+        id: tblUsers.id,
+        name: tblUsers.name,
+        email: tblUsers.email,
+        password_hash: tblUsers.password_hash,
+        is_active: tblUsers.is_active,
+        role_code: tblRoles.role_code,
+        is_primary: tblUserRoles.is_primary
+      })
       .from(tblUsers)
-      .where(eq(tblUsers.email, email))
-      .limit(1);
+      .leftJoin(tblUserRoles, and(
+        eq(tblUserRoles.user_id, tblUsers.id),
+        eq(tblUserRoles.is_deleted, false)
+      ))
+      .leftJoin(tblRoles, and(
+        eq(tblRoles.id, tblUserRoles.role_id),
+        eq(tblRoles.is_active, true)
+      ))
+      .where(and(
+        eq(tblUsers.email, email),
+        eq(tblUsers.is_active, true),
+        eq(tblUsers.is_deleted, false)
+      ));
 
-    if (!user) {
+    if (!userWithRoles.length) {
       throw new Error("Invalid credentials");
     }
 
+    const user = userWithRoles[0];
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
       throw new Error("Invalid credentials");
     }
 
+    const roles = userWithRoles
+      .filter(ur => ur.role_code)
+      .map(ur => ur.role_code!);
+    
+    const user_type = roles.includes("ADMIN") ? "admin" : "employee";
+
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      {
+        user_id: user.id,
+        email: user.email,
+        roles,
+        user_type
+      },
       process.env.JWT_SECRET || "secret",
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } as jwt.SignOptions
+      { expiresIn: "1d" }
     );
 
     const { password_hash: _, ...userWithoutPassword } = user;
-    this.currentUser = userWithoutPassword;
-
-    return { user: userWithoutPassword, token };
+    return { 
+      user: { ...userWithoutPassword, roles, user_type }, 
+      token 
+    };
   }
 
   async register(userData: any) {
-    const { name, email, password, role, profile } = userData;
+    const { name, email, password } = userData;
 
     if (!email || !password || !name) {
       throw new Error("Name, email and password are required");
@@ -64,8 +94,6 @@ export class AuthService {
         name,
         email,
         password_hash: hashedPassword,
-        role: role || "employee",
-        profile,
       })
       .returning();
 
@@ -74,25 +102,46 @@ export class AuthService {
   }
 
   async logout() {
-    this.currentUser = null;
     return { success: true, message: "Logout successful" };
   }
 
   async getCurrentUser(token?: string) {
-    if (token) {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "secret"
-      ) as any;
-      const [user] = await db
-        .select()
+    if (!token) return null;
+    
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
+      
+      const userWithRoles = await db
+        .select({
+          id: tblUsers.id,
+          name: tblUsers.name,
+          email: tblUsers.email,
+          is_active: tblUsers.is_active,
+          role_code: tblRoles.role_code
+        })
         .from(tblUsers)
-        .where(eq(tblUsers.id, decoded.id));
-      if (user) {
-        const { password_hash: _, ...userWithoutPassword } = user;
-        return userWithoutPassword;
-      }
+        .leftJoin(tblUserRoles, and(
+          eq(tblUserRoles.user_id, tblUsers.id),
+          eq(tblUserRoles.is_deleted, false)
+        ))
+        .leftJoin(tblRoles, and(
+          eq(tblRoles.id, tblUserRoles.role_id),
+          eq(tblRoles.is_active, true)
+        ))
+        .where(eq(tblUsers.id, decoded.user_id));
+
+      if (!userWithRoles.length) return null;
+
+      const user = userWithRoles[0];
+      const roles = userWithRoles
+        .filter(ur => ur.role_code)
+        .map(ur => ur.role_code!);
+      
+      const user_type = roles.includes("ADMIN") ? "admin" : "employee";
+
+      return { ...user, roles, user_type };
+    } catch {
+      return null;
     }
-    return this.currentUser;
   }
 }

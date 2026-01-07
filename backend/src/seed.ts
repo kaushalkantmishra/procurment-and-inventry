@@ -5,7 +5,9 @@ import {
   tblItems, 
   tblWarehouses, 
   tblVendors,
-  users,
+  tblUsers,
+  tblRoles,
+  tblUserRoles,
   tblModules,
   tblUserModulePermissions,
   tblApprovalWorkflows,
@@ -13,11 +15,25 @@ import {
   tblSystemEnums,
   tblDocumentSequences
 } from './db/schema';
+import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 
 async function seed() {
     try {
         console.log('Seeding database...');
+
+        // Seed roles first
+        const roleData = [
+            { role_code: 'ADMIN', role_name: 'Administrator', description: 'System administrator with full access' },
+            { role_code: 'REQUESTER', role_name: 'Requester', description: 'Can create purchase requests' },
+            { role_code: 'APPROVER', role_name: 'Approver', description: 'Can approve requests and orders' },
+            { role_code: 'PROCUREMENT', role_name: 'Procurement', description: 'Manages procurement processes' },
+            { role_code: 'STORE', role_name: 'Store', description: 'Manages inventory and store operations' },
+            { role_code: 'FINANCE', role_name: 'Finance', description: 'Handles financial operations' }
+        ];
+
+        const insertedRoles = await db.insert(tblRoles).values(roleData).onConflictDoNothing().returning();
+        console.log('Roles seeded');
 
         // Seed users
         const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -26,20 +42,57 @@ async function seed() {
                 name: 'Admin User',
                 email: 'admin@company.com',
                 password_hash: hashedPassword,
-                role: 'admin' as const,
                 is_active: true
             },
             {
-                name: 'Employee User',
-                email: 'employee@company.com', 
-                password_hash: await bcrypt.hash('employee123', 10),
-                role: 'employee' as const,
+                name: 'Requester User',
+                email: 'requester@company.com', 
+                password_hash: await bcrypt.hash('requester123', 10),
+                is_active: true
+            },
+            {
+                name: 'Approver User',
+                email: 'approver@company.com', 
+                password_hash: await bcrypt.hash('approver123', 10),
+                is_active: true
+            },
+            {
+                name: 'Procurement User',
+                email: 'procurement@company.com', 
+                password_hash: await bcrypt.hash('procurement123', 10),
+                is_active: true
+            },
+            {
+                name: 'Store User',
+                email: 'store@company.com', 
+                password_hash: await bcrypt.hash('store123', 10),
+                is_active: true
+            },
+            {
+                name: 'Finance User',
+                email: 'finance@company.com', 
+                password_hash: await bcrypt.hash('finance123', 10),
                 is_active: true
             }
         ];
 
-        const insertedUsers = await db.insert(users).values(userData).onConflictDoNothing().returning();
+        const insertedUsers = await db.insert(tblUsers).values(userData).onConflictDoNothing().returning();
         console.log('Users seeded');
+
+        // Assign roles to users
+        if (insertedUsers.length > 0 && insertedRoles.length > 0) {
+            const userRoleData = [
+                { user_id: insertedUsers[0].id, role_id: insertedRoles.find(r => r.role_code === 'ADMIN')!.id, is_primary: true },
+                { user_id: insertedUsers[1].id, role_id: insertedRoles.find(r => r.role_code === 'REQUESTER')!.id, is_primary: true },
+                { user_id: insertedUsers[2].id, role_id: insertedRoles.find(r => r.role_code === 'APPROVER')!.id, is_primary: true },
+                { user_id: insertedUsers[3].id, role_id: insertedRoles.find(r => r.role_code === 'PROCUREMENT')!.id, is_primary: true },
+                { user_id: insertedUsers[4].id, role_id: insertedRoles.find(r => r.role_code === 'STORE')!.id, is_primary: true },
+                { user_id: insertedUsers[5].id, role_id: insertedRoles.find(r => r.role_code === 'FINANCE')!.id, is_primary: true }
+            ];
+
+            await db.insert(tblUserRoles).values(userRoleData).onConflictDoNothing();
+            console.log('User roles assigned');
+        }
 
         // Seed modules
         const moduleData = [
@@ -93,41 +146,64 @@ async function seed() {
         const insertedModules = await db.insert(tblModules).values(moduleData).onConflictDoNothing().returning();
         console.log('Modules seeded');
 
-        // Seed user module permissions (Admin gets all, Employee gets limited)
+        // Seed user module permissions (Admin gets all, others get role-specific)
         if (insertedUsers.length > 0 && insertedModules.length > 0) {
-            const adminUser = insertedUsers.find(u => u.role === 'admin');
-            const employeeUser = insertedUsers.find(u => u.role === 'employee');
-
+            const adminUser = insertedUsers[0]; // Admin user
             const permissionData = [];
 
             // Admin permissions - full access to all modules
-            if (adminUser) {
-                for (const module of insertedModules) {
-                    permissionData.push({
-                        user_id: adminUser.id,
-                        module_id: module.id,
-                        can_view: true,
-                        can_create: true,
-                        can_edit: true,
-                        can_delete: true
-                    });
-                }
+            for (const module of insertedModules) {
+                permissionData.push({
+                    user_id: adminUser.id,
+                    module_id: module.id,
+                    can_view: true,
+                    can_create: true,
+                    can_edit: true,
+                    can_delete: true
+                });
             }
 
-            // Employee permissions - limited access
-            if (employeeUser) {
-                const employeeModules = insertedModules.filter(m => 
-                    ['INVENTORY', 'REPORTS'].includes(m.module_code)
-                );
-                for (const module of employeeModules) {
-                    permissionData.push({
-                        user_id: employeeUser.id,
-                        module_id: module.id,
-                        can_view: true,
-                        can_create: false,
-                        can_edit: false,
-                        can_delete: false
-                    });
+            // Other users get limited permissions based on their roles
+            const otherUsers = insertedUsers.slice(1);
+            for (const user of otherUsers) {
+                const userRole = await db.select().from(tblUserRoles).where(eq(tblUserRoles.user_id, user.id)).limit(1);
+                if (userRole.length > 0) {
+                    const role = await db.select().from(tblRoles).where(eq(tblRoles.id, userRole[0].role_id)).limit(1);
+                    if (role.length > 0) {
+                        const roleCode = role[0].role_code;
+                        
+                        // Role-specific module access
+                        let allowedModules: string[] = [];
+                        switch (roleCode) {
+                            case 'REQUESTER':
+                                allowedModules = ['PROCUREMENT', 'INVENTORY'];
+                                break;
+                            case 'APPROVER':
+                                allowedModules = ['PROCUREMENT', 'REPORTS'];
+                                break;
+                            case 'PROCUREMENT':
+                                allowedModules = ['PROCUREMENT', 'INVENTORY', 'MASTERS'];
+                                break;
+                            case 'STORE':
+                                allowedModules = ['INVENTORY', 'MASTERS'];
+                                break;
+                            case 'FINANCE':
+                                allowedModules = ['FINANCE', 'REPORTS'];
+                                break;
+                        }
+
+                        const userModules = insertedModules.filter(m => allowedModules.includes(m.module_code));
+                        for (const module of userModules) {
+                            permissionData.push({
+                                user_id: user.id,
+                                module_id: module.id,
+                                can_view: true,
+                                can_create: roleCode === 'PROCUREMENT' || roleCode === 'STORE',
+                                can_edit: roleCode === 'PROCUREMENT' || roleCode === 'STORE',
+                                can_delete: false
+                            });
+                        }
+                    }
                 }
             }
 
@@ -323,7 +399,11 @@ async function seed() {
         console.log('Database seeded successfully!');
         console.log('\nLogin credentials:');
         console.log('Admin: admin@company.com / admin123');
-        console.log('Employee: employee@company.com / employee123');
+        console.log('Requester: requester@company.com / requester123');
+        console.log('Approver: approver@company.com / approver123');
+        console.log('Procurement: procurement@company.com / procurement123');
+        console.log('Store: store@company.com / store123');
+        console.log('Finance: finance@company.com / finance123');
     } catch (error) {
         console.error('Error seeding database:', error);
     }

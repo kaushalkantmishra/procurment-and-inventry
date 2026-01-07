@@ -57,6 +57,13 @@
       "when": 1767779610706,
       "tag": "0007_complete_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1767790654414,
+      "tag": "0008_wooden_zarek",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 // Authorization Module
 import { authRoutes } from '../modules/authorization/routes/auth.routes';
+import { userManagementRoutes } from '../modules/authorization/routes/user-management.routes';
 
 // Masters Module
 import { categoryRoutes } from '../modules/masters/routes/category.routes';
@@ -36,6 +37,7 @@ const router = Router();
 
 // Authorization Routes
 router.use('/auth', authRoutes);
+router.use('/user-management', userManagementRoutes);
 
 // Masters Routes
 router.use('/categories', categoryRoutes);

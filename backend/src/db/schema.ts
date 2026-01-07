@@ -1,18 +1,20 @@
 // Main Schema File - Imports from all schema files
 
 // Import all tables from schema files
+export * from "./auth.schema";
 export * from "./masters.schema";
 export * from "./inventory.schema";
 export * from "./procurement.schema";
 
 // Backward compatibility aliases
 import { 
-  tblUsers,
   tblUnits, 
   tblCategories, 
   tblWarehouses, 
   tblVendors 
 } from "./masters.schema";
+
+import { tblUsers } from "./auth.schema";
 
 import { 
   tblItems,

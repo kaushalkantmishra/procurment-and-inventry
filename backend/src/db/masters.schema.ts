@@ -12,24 +12,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-// --- User Schema ---
-export const roles = ["admin", "employee"] as const;
-export type Role = (typeof roles)[number];
-
-export const tblUsers = pgTable("tbl_users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  profile: varchar("profile", { length: 255 }),
-  password_hash: varchar("password", { length: 255 }).notNull(),
-  role: text("role").$type<Role>().notNull(),
-  token: varchar("token", { length: 1000 }),
-  is_active: boolean("is_active").notNull().default(true),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-  deleted_at: timestamp("deleted_at"),
-  is_deleted: boolean("is_deleted").default(false),
-});
+// Import users from auth schema
+import { tblUsers } from "./auth.schema";
 
 // --- Modules Schema ---
 export const tblModules = pgTable("tbl_modules", {

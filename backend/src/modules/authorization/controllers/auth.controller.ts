@@ -39,8 +39,7 @@ export class AuthController {
 
   getCurrentUser = async (req: Request, res: Response) => {
     try {
-      const token = req.headers.authorization?.replace("Bearer ", "");
-      const user = await this.authService.getCurrentUser(token);
+      const user = req.user;
       return ApiResponse.success(res, user, "User retrieved successfully");
     } catch (error) {
       return ApiResponse.unauthorized(res, ErrorHandler.getErrorMessage(error));
