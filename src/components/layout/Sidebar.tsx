@@ -18,6 +18,9 @@ import {
   FileText,
   ChevronDown,
   ChevronRight as ChevronRightIcon,
+  Truck,
+  Receipt,
+  GitCompare,
 } from "lucide-react";
 import { useStore } from "../../store/useStore";
 import { useAuthStore } from "../../store/authStore";
@@ -47,9 +50,29 @@ const getModuleNavItems = (module?: string): NavItemOrGroup[] => {
       return [
         { path: "/procurement", label: "Dashboard", icon: LayoutDashboard },
         {
+          path: "/procurement/purchase-requests",
+          label: "Purchase Requests",
+          icon: FileText,
+        },
+        {
           path: "/procurement/purchase-orders",
           label: "Purchase Orders",
           icon: ShoppingCart,
+        },
+        {
+          path: "/procurement/goods-receipt-notes",
+          label: "Goods Receipt Notes",
+          icon: Truck,
+        },
+        {
+          path: "/procurement/vendor-invoices",
+          label: "Vendor Invoices",
+          icon: Receipt,
+        },
+        {
+          path: "/procurement/three-way-matching",
+          label: "3-Way Matching",
+          icon: GitCompare,
         },
         { path: "/procurement/vendors", label: "Vendors", icon: Users },
         { path: "/procurement/reports", label: "Reports", icon: BarChart3 },

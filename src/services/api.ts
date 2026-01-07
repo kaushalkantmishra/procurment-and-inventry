@@ -295,14 +295,132 @@ class ApiService {
     });
   }
 
+  async getPurchaseRequestById(id: number) {
+    return this.request(`/purchase-requests/${id}`);
+  }
+
+  async updatePurchaseRequest(id: number, pr: any) {
+    return this.request(`/purchase-requests/${id}`, {
+      method: 'PUT',
+      data: pr,
+    });
+  }
+
+  async deletePurchaseRequest(id: number) {
+    return this.request(`/purchase-requests/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Vendor Invoices API
+  async getVendorInvoices() {
+    return this.request('/vendor-invoices');
+  }
+
+  async createVendorInvoice(invoice: any) {
+    return this.request('/vendor-invoices', {
+      method: 'POST',
+      data: invoice,
+    });
+  }
+
+  async getVendorInvoiceById(id: number) {
+    return this.request(`/vendor-invoices/${id}`);
+  }
+
+  async updateVendorInvoice(id: number, invoice: any) {
+    return this.request(`/vendor-invoices/${id}`, {
+      method: 'PUT',
+      data: invoice,
+    });
+  }
+
+  // Three Way Matching API
+  async getThreeWayMatching() {
+    return this.request('/three-way-matching');
+  }
+
+  async createThreeWayMatch(match: any) {
+    return this.request('/three-way-matching', {
+      method: 'POST',
+      data: match,
+    });
+  }
+
+  async updateThreeWayMatch(id: number, match: any) {
+    return this.request(`/three-way-matching/${id}`, {
+      method: 'PUT',
+      data: match,
+    });
+  }
+
+  async createAutomaticThreeWayMatch(data: any) {
+    return this.request('/three-way-matching/auto-match', {
+      method: 'POST',
+      data
+    });
+  }
+
+  // Procurement Dashboard API
+  async getProcurementDashboard() {
+    return this.request('/procurement/dashboard');
+  }
+
   async getGRNs() {
-    return this.request('/grn');
+    return this.request('/grn-headers');
   }
 
   async createGRN(grn: any) {
-    return this.request('/grn', {
+    return this.request('/grn-headers', {
       method: 'POST',
       data: grn,
+    });
+  }
+
+  async getGRNById(id: number) {
+    return this.request(`/grn-headers/${id}`);
+  }
+
+  async updateGRN(id: number, grn: any) {
+    return this.request(`/grn-headers/${id}`, {
+      method: 'PUT',
+      data: grn,
+    });
+  }
+
+  async approveGRN(id: number, data: any) {
+    return this.request(`/grn-headers/${id}/approve`, {
+      method: 'POST',
+      data
+    });
+  }
+
+  async rejectGRN(id: number, data: any) {
+    return this.request(`/grn-headers/${id}/reject`, {
+      method: 'POST',
+      data
+    });
+  }
+
+  // Approval API
+  async submitPOForApproval(id: number, data: any) {
+    return this.request(`/purchase-orders/${id}/submit-approval`, {
+      method: 'POST',
+      data
+    });
+  }
+
+  async approvePO(id: number, data: any) {
+    return this.request(`/purchase-orders/${id}/approve`, {
+      method: 'POST',
+      data
+    });
+  }
+
+  async rejectPO(id: number, data: any) {
+    return this.request(`/purchase-orders/${id}/reject`, {
+      method: 'POST',
+      data
     });
   }
 
@@ -331,8 +449,13 @@ class ApiService {
     });
   }
 
-  async getTransactions() {
-    return this.request('/inventory/transactions');
+  async getTransactionsByItem(itemId: number) {
+    return this.request(`/inventory/transactions/item/${itemId}`);
+  }
+
+  async getCurrentStock(itemId: number, warehouseId?: number) {
+    const params = warehouseId ? `?warehouseId=${warehouseId}` : '';
+    return this.request(`/inventory/stock/${itemId}${params}`);
   }
 
   // Auth API

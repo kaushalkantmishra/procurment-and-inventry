@@ -23,6 +23,8 @@ import { grnHeaderRoutes } from '../modules/procurement/routes/grnHeader.routes'
 import { grnDetailRoutes } from '../modules/procurement/routes/grnDetail.routes';
 import { purchaseRequestRoutes } from '../modules/procurement/routes/purchaseRequest.routes';
 import { vendorInvoiceRoutes } from '../modules/procurement/routes/vendorInvoice.routes';
+import { threeWayMatchingRoutes } from '../modules/procurement/routes/threeWayMatching.routes';
+import { procurementDashboardRoutes } from '../modules/procurement/routes/procurementDashboard.routes';
 
 // Extended Modules
 import { approvalWorkflowRoutes } from '../modules/masters/routes/approvalWorkflow.routes';
@@ -46,7 +48,7 @@ router.use('/vendors', vendorRoutes);
 router.use('/items', itemRoutes);
 router.use('/grn', grnRoutes);
 router.use('/receipts', receiptRoutes);
-router.use('/inventory-transactions', inventoryTransactionRoutes);
+router.use('/inventory', inventoryTransactionRoutes);
 
 // Procurement Routes
 router.use('/purchase-orders', purchaseOrderRoutes);
@@ -55,6 +57,8 @@ router.use('/grn-headers', grnHeaderRoutes);
 router.use('/grn-details', grnDetailRoutes);
 router.use('/purchase-requests', purchaseRequestRoutes);
 router.use('/vendor-invoices', vendorInvoiceRoutes);
+router.use('/three-way-matching', threeWayMatchingRoutes);
+router.use('/procurement/dashboard', procurementDashboardRoutes);
 
 // Extended Routes
 router.use('/approvals', approvalWorkflowRoutes);

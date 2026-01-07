@@ -8,6 +8,8 @@ import {
   Clock,
   Wifi,
   WifiOff,
+  FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { KPICard } from "../components/ui/KPICard";
 import { Badge } from "../components/ui/Badge";
@@ -15,7 +17,19 @@ import { useStore } from "../store/useStore";
 import { apiService } from "../services/api";
 
 export const Dashboard: React.FC = () => {
-  const { items, purchaseOrders, loading, fetchItems, fetchPurchaseOrders } = useStore();
+  const { 
+    items, 
+    purchaseOrders, 
+    purchaseRequests, 
+    grns, 
+    vendorInvoices, 
+    loading, 
+    fetchItems, 
+    fetchPurchaseOrders, 
+    fetchPurchaseRequests, 
+    fetchGRNs, 
+    fetchVendorInvoices 
+  } = useStore();
   const [apiStatus, setApiStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
 
   useEffect(() => {
@@ -32,70 +46,65 @@ export const Dashboard: React.FC = () => {
     checkApiStatus();
     fetchItems();
     fetchPurchaseOrders();
-  }, [fetchItems, fetchPurchaseOrders]);
+    fetchPurchaseRequests();
+    fetchGRNs();
+    fetchVendorInvoices();
+  }, [fetchItems, fetchPurchaseOrders, fetchPurchaseRequests, fetchGRNs, fetchVendorInvoices]);
 
-  // Calculate KPIs from real data
-  const lowStockItems = items.filter(
-    (item) => item.safety_stock <= item.reorder_level
+  // Calculate KPIs from real procurement data
+  const totalPRs = purchaseRequests.length;
+  const pendingPRs = purchaseRequests.filter(
+    (pr) => pr.status === "Saved" || pr.status === "Submitted"
   ).length;
-  const totalVendors = 5; // Static for now
   const openPOs = purchaseOrders.filter(
     (po) => po.status === "Draft" || po.status === "Approved"
   ).length;
-  const stockValue = items.reduce(
-    (sum, item) => sum + parseFloat(item.selling_price || '0') * (item.safety_stock || 0),
+  const pendingGRNs = grns.filter(
+    (grn) => grn.inspection_status === "Pending"
+  ).length;
+  const pendingInvoices = vendorInvoices.filter(
+    (inv) => inv.match_status === "UNMATCHED"
+  ).length;
+  const totalPOValue = purchaseOrders.reduce(
+    (sum, po) => sum + parseFloat(po.total_amount || '0'),
     0
   );
 
-  // Recent activity (dummy data)
+  // Recent procurement activity
   const recentActivity = [
-    {
-      id: 1,
-      action: "New Purchase Order",
-      description: "PO-2024-010 created for Office Essentials Inc.",
-      time: "2 hours ago",
+    ...purchaseRequests.slice(0, 2).map((pr) => ({
+      id: `pr-${pr.id}`,
+      action: "Purchase Request",
+      description: `PR-${pr.id} ${pr.status.toLowerCase()} - ${pr.justification?.substring(0, 50)}...`,
+      time: new Date(pr.created_at).toLocaleDateString(),
+      type: "pr",
+    })),
+    ...purchaseOrders.slice(0, 2).map((po) => ({
+      id: `po-${po.id}`,
+      action: "Purchase Order",
+      description: `${po.po_number} ${po.status.toLowerCase()} - ${po.supplier_id}`,
+      time: new Date(po.created_at).toLocaleDateString(),
       type: "po",
-    },
-    {
-      id: 2,
-      action: "Low Stock Alert",
-      description: "Safety Helmet stock below reorder level",
-      time: "3 hours ago",
-      type: "alert",
-    },
-    {
-      id: 3,
-      action: "Vendor Added",
-      description: "Reliable Chemical Supplies added to vendor list",
-      time: "5 hours ago",
-      type: "vendor",
-    },
-    {
-      id: 4,
-      action: "Stock Received",
-      description: "50 units of Laptop Computer received",
-      time: "1 day ago",
-      type: "stock",
-    },
-    {
-      id: 5,
-      action: "PO Approved",
-      description: "PO-2024-008 approved by manager",
-      time: "2 days ago",
-      type: "po",
-    },
-  ];
+    })),
+    ...grns.slice(0, 1).map((grn) => ({
+      id: `grn-${grn.id}`,
+      action: "Goods Receipt",
+      description: `${grn.grn_number} received from ${grn.supplier_id}`,
+      time: new Date(grn.created_at).toLocaleDateString(),
+      type: "grn",
+    })),
+  ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5);
 
   const getBadgeVariant = (type: string) => {
     switch (type) {
-      case "po":
+      case "pr":
         return "info";
-      case "alert":
+      case "po":
+        return "success";
+      case "grn":
         return "warning";
-      case "vendor":
-        return "success";
-      case "stock":
-        return "success";
+      case "invoice":
+        return "danger";
       default:
         return "default";
     }
@@ -106,10 +115,10 @@ export const Dashboard: React.FC = () => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Dashboard
+          Procurement Dashboard
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Welcome back! Here's what's happening with your inventory.
+          Monitor your procurement operations and key metrics
         </p>
       </div>
 
@@ -136,37 +145,51 @@ export const Dashboard: React.FC = () => {
       {!loading && (
         <>
           {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <KPICard
-              title="Total Products"
-              value={items.length}
-              icon={Package}
+              title="Total PRs"
+              value={totalPRs}
+              icon={FileText}
               trend={{ value: 12, isPositive: true }}
-              iconColor="text-primary-600"
+              iconColor="text-blue-600"
             />
             <KPICard
-              title="Low Stock Items"
-              value={lowStockItems}
-              icon={Package}
-              trend={{ value: 12, isPositive: false }}
-              iconColor="text-warning-600"
+              title="Pending PRs"
+              value={pendingPRs}
+              icon={AlertTriangle}
+              trend={{ value: 5, isPositive: false }}
+              iconColor="text-orange-600"
             />
             <KPICard
-              title="Purchase Orders"
-              value={purchaseOrders.length}
+              title="Open POs"
+              value={openPOs}
               icon={ShoppingCart}
-              trend={{ value: 5, isPositive: true }}
-              iconColor="text-success-600"
+              trend={{ value: 8, isPositive: true }}
+              iconColor="text-green-600"
             />
             <KPICard
-              title="Total Stock Value"
-              value={`$${stockValue.toLocaleString("en-US", {
+              title="Pending GRNs"
+              value={pendingGRNs}
+              icon={Package}
+              trend={{ value: 3, isPositive: false }}
+              iconColor="text-purple-600"
+            />
+            <KPICard
+              title="Pending Invoices"
+              value={pendingInvoices}
+              icon={AlertTriangle}
+              trend={{ value: 2, isPositive: false }}
+              iconColor="text-red-600"
+            />
+            <KPICard
+              title="PO Value"
+              value={`$${totalPOValue.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}`}
               icon={DollarSign}
               trend={{ value: 15, isPositive: true }}
-              iconColor="text-secondary-600"
+              iconColor="text-emerald-600"
             />
           </div>
         </>

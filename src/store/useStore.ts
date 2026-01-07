@@ -69,7 +69,10 @@ interface StoreState {
   // Data
   items: Item[];
   purchaseOrders: PurchaseOrder[];
+  purchaseRequests: any[];
   grns: any[];
+  vendorInvoices: any[];
+  threeWayMatching: any[];
   receipts: any[];
   loading: boolean;
   error: string | null;
@@ -79,8 +82,13 @@ interface StoreState {
   createItem: (item: Partial<Item>) => Promise<void>;
   fetchPurchaseOrders: () => Promise<void>;
   createPurchaseOrder: (po: any) => Promise<void>;
+  fetchPurchaseRequests: () => Promise<void>;
+  createPurchaseRequest: (pr: any) => Promise<void>;
   fetchGRNs: () => Promise<void>;
   createGRN: (grn: any) => Promise<void>;
+  fetchVendorInvoices: () => Promise<void>;
+  createVendorInvoice: (invoice: any) => Promise<void>;
+  fetchThreeWayMatching: () => Promise<void>;
   fetchReceipts: () => Promise<void>;
   createReceipt: (receipt: any) => Promise<void>;
   setLoading: (loading: boolean) => void;
@@ -135,7 +143,10 @@ export const useStore = create<StoreState>((set, get) => ({
   // Data state
   items: [],
   purchaseOrders: [],
+  purchaseRequests: [],
   grns: [],
+  vendorInvoices: [],
+  threeWayMatching: [],
   receipts: [],
   loading: false,
   error: null,
@@ -187,20 +198,77 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
+  fetchPurchaseRequests: async () => {
+    try {
+      set({ loading: true, error: null });
+      const response = await apiService.getPurchaseRequests();
+      const purchaseRequests = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      set({ purchaseRequests, loading: false });
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch purchase requests', loading: false, purchaseRequests: [] });
+    }
+  },
+
+  createPurchaseRequest: async (pr) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await apiService.createPurchaseRequest(pr);
+      const newPR = response.data || response;
+      set((state) => ({ purchaseRequests: [...state.purchaseRequests, newPR], loading: false }));
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to create purchase request', loading: false });
+    }
+  },
+
+  fetchVendorInvoices: async () => {
+    try {
+      set({ loading: true, error: null });
+      const response = await apiService.getVendorInvoices();
+      const vendorInvoices = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      set({ vendorInvoices, loading: false });
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch vendor invoices', loading: false, vendorInvoices: [] });
+    }
+  },
+
+  createVendorInvoice: async (invoice) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await apiService.createVendorInvoice(invoice);
+      const newInvoice = response.data || response;
+      set((state) => ({ vendorInvoices: [...state.vendorInvoices, newInvoice], loading: false }));
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to create vendor invoice', loading: false });
+    }
+  },
+
+  fetchThreeWayMatching: async () => {
+    try {
+      set({ loading: true, error: null });
+      const response = await apiService.getThreeWayMatching();
+      const threeWayMatching = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      set({ threeWayMatching, loading: false });
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch three way matching', loading: false, threeWayMatching: [] });
+    }
+  },
+
   fetchGRNs: async () => {
     try {
       set({ loading: true, error: null });
-      const grns = await apiService.getGRNs();
+      const response = await apiService.getGRNs();
+      const grns = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
       set({ grns, loading: false });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch GRNs', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch GRNs', loading: false, grns: [] });
     }
   },
 
   createGRN: async (grn) => {
     try {
       set({ loading: true, error: null });
-      const newGRN = await apiService.createGRN(grn);
+      const response = await apiService.createGRN(grn);
+      const newGRN = response.data || response;
       set((state) => ({ grns: [...state.grns, newGRN], loading: false }));
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to create GRN', loading: false });
@@ -210,17 +278,19 @@ export const useStore = create<StoreState>((set, get) => ({
   fetchReceipts: async () => {
     try {
       set({ loading: true, error: null });
-      const receipts = await apiService.getReceipts();
+      const response = await apiService.getReceipts();
+      const receipts = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
       set({ receipts, loading: false });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch receipts', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch receipts', loading: false, receipts: [] });
     }
   },
 
   createReceipt: async (receipt) => {
     try {
       set({ loading: true, error: null });
-      const newReceipt = await apiService.createReceipt(receipt);
+      const response = await apiService.createReceipt(receipt);
+      const newReceipt = response.data || response;
       set((state) => ({ receipts: [...state.receipts, newReceipt], loading: false }));
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to create receipt', loading: false });

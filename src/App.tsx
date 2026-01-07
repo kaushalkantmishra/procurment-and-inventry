@@ -20,6 +20,15 @@ import { Units } from "./pages/masters/Units";
 import { Warehouses } from "./pages/masters/Warehouses";
 import { VendorsMaster } from "./pages/masters/VendorsMaster";
 
+// Procurement Module Pages
+import { 
+  ProcurementDashboard,
+  PurchaseRequests,
+  GoodsReceiptNotes,
+  VendorInvoices,
+  ThreeWayMatching
+} from "./modules/procurement";
+
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -76,8 +85,12 @@ function App() {
               <ProtectedRoute>
                 <Layout module="procurement">
                   <Routes>
-                    <Route index element={<Dashboard />} />
+                    <Route index element={<ProcurementDashboard />} />
+                    <Route path="purchase-requests" element={<PurchaseRequests />} />
                     <Route path="purchase-orders" element={<PurchaseOrders />} />
+                    <Route path="goods-receipt-notes" element={<GoodsReceiptNotes />} />
+                    <Route path="vendor-invoices" element={<VendorInvoices />} />
+                    <Route path="three-way-matching" element={<ThreeWayMatching />} />
                     <Route path="vendors" element={<Vendors />} />
                     <Route path="reports" element={<Reports />} />
                   </Routes>

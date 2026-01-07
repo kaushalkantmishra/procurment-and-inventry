@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Eye } from "lucide-react";
+import { Plus, Eye, Send, Check, X } from "lucide-react";
 import { DataTable } from "../components/ui/DataTable";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
@@ -29,6 +29,39 @@ export const PurchaseOrders: React.FC = () => {
       setVendors(vendorData);
     } catch (error) {
       console.error('Failed to fetch vendors:', error);
+    }
+  };
+
+  const handleSubmitForApproval = async (poId: number) => {
+    try {
+      await apiService.submitPOForApproval(poId, { submittedBy: 'ADMIN' });
+      fetchPurchaseOrders();
+      alert('Purchase order submitted for approval successfully');
+    } catch (error) {
+      console.error('Failed to submit PO for approval:', error);
+      alert('Failed to submit purchase order for approval');
+    }
+  };
+
+  const handleApprove = async (poId: number) => {
+    try {
+      await apiService.approvePO(poId, { approvedBy: 'ADMIN' });
+      fetchPurchaseOrders();
+      alert('Purchase order approved successfully');
+    } catch (error) {
+      console.error('Failed to approve PO:', error);
+      alert('Failed to approve purchase order');
+    }
+  };
+
+  const handleReject = async (poId: number) => {
+    try {
+      await apiService.rejectPO(poId, { rejectedBy: 'ADMIN', reason: 'Rejected by user' });
+      fetchPurchaseOrders();
+      alert('Purchase order rejected successfully');
+    } catch (error) {
+      console.error('Failed to reject PO:', error);
+      alert('Failed to reject purchase order');
     }
   };
 
@@ -75,7 +108,9 @@ export const PurchaseOrders: React.FC = () => {
           "info" | "warning" | "success" | "default" | "danger"
         > = {
           Draft: "default",
+          Pending: "warning",
           Approved: "info",
+          Rejected: "danger",
           Received: "success",
           Closed: "success",
         };
@@ -86,9 +121,38 @@ export const PurchaseOrders: React.FC = () => {
       key: "actions",
       header: "Actions",
       render: (po: any) => (
-        <Button size="sm" variant="ghost" onClick={() => setViewingPO(po)}>
-          <Eye size={16} />
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="ghost" onClick={() => setViewingPO(po)}>
+            <Eye size={16} />
+          </Button>
+          {po.status === 'Draft' && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => handleSubmitForApproval(po.id)}
+            >
+              <Send size={16} />
+            </Button>
+          )}
+          {po.status === 'Pending' && (
+            <>
+              <Button 
+                size="sm" 
+                variant="success" 
+                onClick={() => handleApprove(po.id)}
+              >
+                <Check size={16} />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="danger" 
+                onClick={() => handleReject(po.id)}
+              >
+                <X size={16} />
+              </Button>
+            </>
+          )}
+        </div>
       ),
     },
   ];
@@ -164,6 +228,14 @@ export const PurchaseOrders: React.FC = () => {
               line_total: (item.quantity * item.unitPrice).toString()
             }))
           };
+
+          console.log('Creating PO with data:', poData); // Debug log
+          console.log('Selected items:', selectedItems); // Debug log
+          
+          if (selectedItems.length === 0) {
+            alert('Please add at least one item to the purchase order.');
+            return;
+          }
 
           await createPurchaseOrder(poData);
           setIsModalOpen(false);
@@ -244,7 +316,7 @@ export const PurchaseOrders: React.FC = () => {
             </div>
             
             {/* Selected Items List */}
-            {selectedItems.length > 0 && (
+            {selectedItems.length > 0 ? (
               <div className="mt-4">
                 <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Selected Items</h4>
                 <div className="space-y-2">
@@ -263,6 +335,11 @@ export const PurchaseOrders: React.FC = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+            ) : (
+              <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <p className="text-yellow-700 dark:text-yellow-300 text-sm font-medium">⚠️ No items selected</p>
+                <p className="text-yellow-600 dark:text-yellow-400 text-xs mt-1">Please add at least one item to create a purchase order.</p>
               </div>
             )}
           </div>
@@ -300,7 +377,7 @@ export const PurchaseOrders: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
+            <Button type="submit" variant="primary" disabled={selectedItems.length === 0}>
               Create PO
             </Button>
           </div>

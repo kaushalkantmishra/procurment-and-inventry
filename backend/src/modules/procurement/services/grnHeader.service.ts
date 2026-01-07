@@ -1,6 +1,7 @@
 import { db } from "../../../db/index";
-import { tblGrnHeaders } from "../../../db/schema";
+import { tblGrnHeaders, tblGrnDetails, tblPoLines } from "../../../db/schema";
 import { eq, and } from "drizzle-orm";
+import { InventoryTransactionService } from "../../inventory/services/inventoryTransaction.service";
 
 export class GRNHeaderService {
   async getAll() {
@@ -21,8 +22,31 @@ export class GRNHeaderService {
   }
 
   async create(data: any) {
-    const [grn] = await db.insert(tblGrnHeaders).values(data).returning();
-    return grn;
+    const { details, ...grnData } = data;
+    
+    return await db.transaction(async (tx) => {
+      try {
+        // Create GRN header
+        const [grn] = await tx.insert(tblGrnHeaders).values({
+          ...grnData,
+          receipt_date: new Date(),
+          inspection_status: 'Pending'
+        }).returning();
+        
+        // Create GRN details if provided
+        if (details && details.length > 0) {
+          const grnDetails = details.map((detail: any) => ({
+            ...detail,
+            grn_id: grn.id 
+          }));
+          await tx.insert(tblGrnDetails).values(grnDetails).returning();
+        }
+        
+        return grn;
+      } catch (error) {
+        throw error;
+      }
+    });
   }
 
   async update(id: number, data: any) {
@@ -43,5 +67,78 @@ export class GRNHeaderService {
       .returning();
     if (!grn) throw new Error("GRN header not found");
     return grn;
+  }
+
+  async approve(id: number, approvedBy: string) {
+    return await db.transaction(async (tx) => {
+      // Update GRN status to Approved
+      const [grn] = await tx.update(tblGrnHeaders)
+        .set({ inspection_status: 'Approved', updated_at: new Date() })
+        .where(eq(tblGrnHeaders.id, id))
+        .returning();
+      
+      if (!grn) throw new Error('GRN not found');
+      
+      // Get GRN details for inventory updates
+      const grnDetails = await tx.select()
+        .from(tblGrnDetails)
+        .where(eq(tblGrnDetails.grn_id, id));  
+      
+      // Update inventory for each accepted item
+      for (const detail of grnDetails) {
+        if (detail.accepted_qty > 0 && detail.po_line_id) {
+          // Get PO line for costing information
+          const [poLine] = await tx.select()
+            .from(tblPoLines)
+            .where(eq(tblPoLines.id, detail.po_line_id));
+          
+          const unitCost = poLine ? parseFloat(poLine.unit_price) : 0;
+          
+          // Call inventory API to update stock
+          await this.updateInventoryStock({
+            item_id: detail.item_id,
+            quantity: detail.accepted_qty,
+            warehouse_id: 1,
+            unit_cost: unitCost,
+            reference_id: id,
+            reference_number: grn.grn_number
+          });
+        }
+      }
+      
+      return { message: 'GRN approved and inventory updated successfully', grn };
+    });
+  }
+
+  async reject(id: number, rejectedBy: string, reason: string) {
+    const [grn] = await db.update(tblGrnHeaders)
+      .set({ 
+        inspection_status: 'Rejected', 
+        remarks: reason,
+        updated_at: new Date() 
+      })
+      .where(eq(tblGrnHeaders.id, id))
+      .returning();
+    
+    if (!grn) throw new Error('GRN not found');
+    return { message: 'GRN rejected successfully', grn };
+  }
+
+  private async updateInventoryStock(data: any) {
+    try {
+      const inventoryService = new InventoryTransactionService();
+      
+      await inventoryService.stockIn({
+        item_id: data.item_id,
+        quantity: data.quantity,
+        reference_type: 'GRN',
+        reference_id: data.reference_id,
+        reference_number: data.reference_number,
+        notes: `Stock received via GRN ${data.reference_number}`,
+        created_by: 'SYSTEM'
+      });
+    } catch (error) {
+      throw new Error(`Inventory update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }
