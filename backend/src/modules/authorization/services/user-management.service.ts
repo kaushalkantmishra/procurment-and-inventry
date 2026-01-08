@@ -1,6 +1,7 @@
 import { db } from "../../../db/index";
 import { tblUsers, tblRoles, tblUserRoles } from "../../../db/schema";
 import { eq, and } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export class UserManagementService {
   async assignRoles(userId: string, roleIds: number[], primaryRoleId?: number) {
@@ -59,5 +60,51 @@ export class UserManagementService {
       })
       .from(tblUsers)
       .where(eq(tblUsers.is_deleted, false));
+  }
+
+  async updateUserProfile(userId: string, data: { name?: string; email?: string }) {
+    const [updatedUser] = await db
+      .update(tblUsers)
+      .set({ 
+        ...data,
+        updated_at: new Date()
+      })
+      .where(eq(tblUsers.id, userId))
+      .returning({
+        id: tblUsers.id,
+        name: tblUsers.name,
+        email: tblUsers.email,
+        is_active: tblUsers.is_active
+      });
+    
+    return updatedUser;
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const [user] = await db
+      .select()
+      .from(tblUsers)
+      .where(eq(tblUsers.id, userId));
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isCurrentPasswordValid) {
+      throw new Error("Current password is incorrect");
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+    await db
+      .update(tblUsers)
+      .set({ 
+        password_hash: hashedNewPassword,
+        updated_at: new Date()
+      })
+      .where(eq(tblUsers.id, userId));
+    
+    return { success: true, message: "Password changed successfully" };
   }
 }

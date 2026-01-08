@@ -6,12 +6,16 @@ import { requireAdmin } from '../../../middleware/role.middleware';
 const router = Router();
 const userManagementController = new UserManagementController();
 
-// All routes require admin access
-router.use(authMiddleware, requireAdmin);
+// Admin-only routes
+router.use('/admin', authMiddleware, requireAdmin);
+router.post('/admin/assign-roles', userManagementController.assignRoles);
+router.get('/admin/users/:userId/roles', userManagementController.getUserRoles);
+router.get('/admin/roles', userManagementController.getAllRoles);
+router.get('/admin/users', userManagementController.getAllUsers);
 
-router.post('/assign-roles', userManagementController.assignRoles);
-router.get('/users/:userId/roles', userManagementController.getUserRoles);
-router.get('/roles', userManagementController.getAllRoles);
-router.get('/users', userManagementController.getAllUsers);
+// User profile routes (authenticated users)
+router.use(authMiddleware);
+router.put('/profile', userManagementController.updateProfile);
+router.post('/change-password', userManagementController.changePassword);
 
 export { router as userManagementRoutes };

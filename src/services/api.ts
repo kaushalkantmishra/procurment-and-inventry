@@ -15,7 +15,7 @@ class ApiService {
 
     // Request interceptor to add auth token
     this.client.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -464,9 +464,6 @@ class ApiService {
       method: 'POST',
       data: credentials,
     });
-    if (result?.token) {
-      localStorage.setItem('token', result.token);
-    }
     return result;
   }
 
@@ -478,12 +475,45 @@ class ApiService {
   }
 
   async logout() {
-    localStorage.removeItem('token');
     return this.request('/auth/logout', { method: 'POST' });
   }
 
   async getCurrentUser() {
     return this.request('/auth/me');
+  }
+
+  // User Management API
+  async getAllUsers() {
+    return this.request('/user-management/admin/users');
+  }
+
+  async getAllRoles() {
+    return this.request('/user-management/admin/roles');
+  }
+
+  async getUserRoles(userId: string) {
+    return this.request(`/user-management/admin/users/${userId}/roles`);
+  }
+
+  async assignRoles(userId: string, roleIds: number[], primaryRoleId?: number) {
+    return this.request('/user-management/admin/assign-roles', {
+      method: 'POST',
+      data: { userId, roleIds, primaryRoleId }
+    });
+  }
+
+  async updateProfile(data: { name?: string; email?: string }) {
+    return this.request('/user-management/profile', {
+      method: 'PUT',
+      data
+    });
+  }
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    return this.request('/user-management/change-password', {
+      method: 'POST',
+      data: { currentPassword, newPassword }
+    });
   }
 
   async healthCheck() {

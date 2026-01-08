@@ -65,7 +65,7 @@ const ModuleDashboard: React.FC = () => {
                 <User size={20} className="text-gray-500" />
                 <div className="text-sm">
                   <p className="font-medium text-gray-900">{user?.name}</p>
-                  <p className="text-gray-500 capitalize">{user?.role}</p>
+                  <p className="text-gray-500 capitalize">{user?.user_type}</p>
                 </div>
               </div>
               
@@ -117,7 +117,7 @@ const ModuleDashboard: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Your Role</p>
-                <p className="text-lg font-semibold text-gray-900 capitalize">{user?.role}</p>
+                <p className="text-lg font-semibold text-gray-900 capitalize">{user?.user_type}</p>
               </div>
             </div>
           </div>

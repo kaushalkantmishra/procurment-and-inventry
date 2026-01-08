@@ -52,4 +52,40 @@ export class UserManagementController {
       return ApiResponse.error(res, ErrorHandler.getErrorMessage(error));
     }
   };
+
+  updateProfile = async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.user_id;
+      const { name, email } = req.body;
+      
+      if (!userId) {
+        return ApiResponse.unauthorized(res, "User not authenticated");
+      }
+
+      const updatedUser = await this.userManagementService.updateUserProfile(userId, { name, email });
+      return ApiResponse.success(res, updatedUser, "Profile updated successfully");
+    } catch (error) {
+      return ApiResponse.error(res, ErrorHandler.getErrorMessage(error));
+    }
+  };
+
+  changePassword = async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.user_id;
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!userId) {
+        return ApiResponse.unauthorized(res, "User not authenticated");
+      }
+
+      if (!currentPassword || !newPassword) {
+        return ApiResponse.badRequest(res, "Current password and new password are required");
+      }
+
+      const result = await this.userManagementService.changePassword(userId, currentPassword, newPassword);
+      return ApiResponse.success(res, result, "Password changed successfully");
+    } catch (error) {
+      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
+    }
+  };
 }

@@ -140,9 +140,14 @@ export const Login: React.FC = () => {
                   <p className="mb-1">
                     <strong>Admin:</strong> admin@company.com / admin123
                   </p>
+                  <p className="mb-1">
+                    <strong>Procurement:</strong> procurement@company.com / procurement123
+                  </p>
+                  <p className="mb-1">
+                    <strong>Store:</strong> store@company.com / store123
+                  </p>
                   <p>
-                    <strong>Employee:</strong> employee@company.com /
-                    employee123
+                    <strong>Requester:</strong> requester@company.com / requester123
                   </p>
                 </div>
               </div>

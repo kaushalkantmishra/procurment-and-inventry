@@ -1,10 +1,2 @@
-import './core/auth.handler';
-import './items.handler';
-import './po.handler';
-import './grn.handler';
-import './receipts.handler';
-import './categories.handler';
-import './units.handler';
-import './warehouses.handler';
-import './inventory.handler';
-import './vendors.handler';
+// IPC handlers removed - using HTTP API calls instead
+// All communication now goes through the backend API server

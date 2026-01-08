@@ -1,11 +1,13 @@
-// Authentication service for Electron IPC communication
+// Authentication service for HTTP API communication
+import { apiService } from './api';
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'employee';
-  isActive: boolean;
+  roles: string[];
+  user_type: 'admin' | 'employee';
+  is_active: boolean;
 }
 
 export interface LoginCredentials {
@@ -23,56 +25,54 @@ export interface AuthResponse {
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // Mock authentication for development
-      const { email, password } = credentials;
+      const result = await apiService.login(credentials);
       
-      // Check mock credentials
-      if ((email === 'admin@company.com' && password === 'admin123') ||
-          (email === 'employee@company.com' && password === 'employee123')) {
-        
-        const user = {
-          id: '1',
-          name: email === 'admin@company.com' ? 'Admin User' : 'Employee User',
-          email,
-          role: email === 'admin@company.com' ? 'admin' as const : 'employee' as const,
-          isActive: true
-        };
-        
-        const token = 'mock-jwt-token';
-        
-        localStorage.setItem('auth_token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+      if (result?.data?.user && result?.data?.token) {
+        localStorage.setItem('auth_token', result.data.token);
+        localStorage.setItem('user', JSON.stringify(result.data.user));
         
         return {
           success: true,
-          user,
-          token
+          user: result.data.user,
+          token: result.data.token
         };
       } else {
         return {
           success: false,
-          message: 'Invalid email or password'
+          message: result?.message || 'Login failed'
         };
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       return {
         success: false,
-        message: 'Login failed. Please try again.'
+        message: error.message || 'Network error. Please check your connection.'
       };
     }
   }
 
   async logout(): Promise<void> {
     try {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
+      await apiService.logout();
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
     }
   }
 
-  getCurrentUser(): User | null {
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      const result = await apiService.getCurrentUser();
+      return result?.data || null;
+    } catch (error) {
+      console.error('Get current user error:', error);
+      return this.getCurrentUserFromStorage();
+    }
+  }
+
+  getCurrentUserFromStorage(): User | null {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   }
@@ -82,7 +82,12 @@ class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken() && !!this.getCurrentUser();
+    return !!this.getToken() && !!this.getCurrentUserFromStorage();
+  }
+
+  private clearAuth(): void {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
   }
 }
 

@@ -26,7 +26,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await authService.login({ email, password });
       
       if (response.success && response.user) {
-        const modules = await moduleService.getUserModules(response.user.role);
+        const modules = await moduleService.getUserModules(response.user.user_type);
         
         set({
           user: response.user,
@@ -64,19 +64,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loadUserModules: async () => {
     const { user } = get();
     if (user) {
-      const modules = await moduleService.getUserModules(user.role);
+      const modules = await moduleService.getUserModules(user.user_type);
       set({ modules });
     }
   },
 
   initializeAuth: () => {
-    const user = authService.getCurrentUser();
+    const user = authService.getCurrentUserFromStorage();
     const isAuthenticated = authService.isAuthenticated();
     
     if (user && isAuthenticated) {
       set({ user, isAuthenticated });
       // Load modules for authenticated user
-      moduleService.getUserModules(user.role).then(modules => {
+      moduleService.getUserModules(user.user_type).then(modules => {
         set({ modules });
       });
     }
