@@ -36,7 +36,7 @@ export class PurchaseRequestService {
     const [pr] = await db.insert(tblPurchaseRequests).values({
       requesting_department,
       requester_employee_code,
-      required_date: required_date ? new Date(required_date) : undefined,
+      required_date: required_date ? required_date : null,
       justification,
       maintenance_work_order
     }).returning();
@@ -58,7 +58,7 @@ export class PurchaseRequestService {
       .set({ 
         requesting_department,
         requester_employee_code,
-        required_date: required_date ? new Date(required_date) : undefined,
+        required_date: required_date ? required_date : null,
         justification,
         maintenance_work_order,
         status,
