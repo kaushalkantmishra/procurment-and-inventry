@@ -27,7 +27,7 @@ export const KPICard: React.FC<KPICardProps> = ({
           <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
             {title}
           </p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          <p className="text-lg lg:text-xl font-bold text-gray-900 dark:text-gray-100 break-words">
             {value}
           </p>
           {trend && (
