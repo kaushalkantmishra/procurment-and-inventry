@@ -12,6 +12,7 @@ export class PurchaseRequestController {
 
   getAll = async (req: Request, res: Response) => {
     try {
+      // console.log(req.user, "user");
       const purchaseRequests = await this.purchaseRequestService.getAll();
       return ApiResponse.success(
         res,
@@ -67,7 +68,8 @@ export class PurchaseRequestController {
   create = async (req: Request, res: Response) => {
     try {
       const purchaseRequest = await this.purchaseRequestService.create(
-        req.body
+        req.body,
+        req.user!.user_id
       );
       return ApiResponse.created(
         res,

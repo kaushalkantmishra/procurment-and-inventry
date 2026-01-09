@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 // Authorization Module
 import { authRoutes } from '../modules/authorization/routes/auth.routes';
@@ -35,8 +36,13 @@ import { materialIssueRoutes } from '../modules/inventory/routes/materialIssue.r
 
 const router = Router();
 
-// Authorization Routes
+// Public routes (no auth required)
 router.use('/auth', authRoutes);
+
+// Protected routes (auth required)
+router.use(authMiddleware);
+
+// Authorization Routes
 router.use('/user-management', userManagementRoutes);
 
 // Masters Routes

@@ -24,7 +24,7 @@ export class PurchaseRequestService {
     return pr;
   }
 
-  async create(request: CreatePurchaseRequestRequest) {
+  async create(request: CreatePurchaseRequestRequest , userId: string) {
     const {
       requesting_department,
       requester_employee_code,
@@ -35,7 +35,7 @@ export class PurchaseRequestService {
     
     const [pr] = await db.insert(tblPurchaseRequests).values({
       requesting_department,
-      requester_employee_code,
+      requester_employee_code : userId,
       required_date: required_date ? required_date : null,
       justification,
       maintenance_work_order
