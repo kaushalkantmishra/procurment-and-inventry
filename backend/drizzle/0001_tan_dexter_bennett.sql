@@ -1,1 +1,0 @@
-ALTER TABLE "tbl_users" RENAME COLUMN "refresh_token" TO "token";
