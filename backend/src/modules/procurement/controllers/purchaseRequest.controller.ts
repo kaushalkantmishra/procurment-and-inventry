@@ -67,6 +67,28 @@ export class PurchaseRequestController {
 
   create = async (req: Request, res: Response) => {
     try {
+      // Validate request payload
+      if (!req.body.lines || !Array.isArray(req.body.lines) || req.body.lines.length === 0) {
+        return ApiResponse.badRequest(
+          res,
+          "At least one PR line is required",
+          "purchase-requests-create",
+          req
+        );
+      }
+
+      // Validate each line
+      for (const line of req.body.lines) {
+        if (!line.item_id || !line.quantity || line.quantity <= 0) {
+          return ApiResponse.badRequest(
+            res,
+            "Each line must have item_id and quantity > 0",
+            "purchase-requests-create",
+            req
+          );
+        }
+      }
+
       const purchaseRequest = await this.purchaseRequestService.create(
         req.body,
         req.user!.user_id

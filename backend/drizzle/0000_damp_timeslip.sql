@@ -345,7 +345,7 @@ CREATE TABLE "tbl_purchase_request_lines" (
 CREATE TABLE "tbl_purchase_requests" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"requesting_department" varchar(100),
-	"requester_employee_code" varchar(50),
+	"requested_by_user_id" uuid NOT NULL,
 	"date_of_request" timestamp DEFAULT now(),
 	"required_date" date,
 	"justification" text,
@@ -586,6 +586,7 @@ ALTER TABLE "tbl_po_lines" ADD CONSTRAINT "tbl_po_lines_po_id_tbl_purchase_order
 ALTER TABLE "tbl_po_lines" ADD CONSTRAINT "tbl_po_lines_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_purchase_request_lines" ADD CONSTRAINT "tbl_purchase_request_lines_pr_id_tbl_purchase_requests_id_fk" FOREIGN KEY ("pr_id") REFERENCES "public"."tbl_purchase_requests"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_purchase_request_lines" ADD CONSTRAINT "tbl_purchase_request_lines_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "tbl_purchase_requests" ADD CONSTRAINT "tbl_purchase_requests_requested_by_user_id_tbl_users_id_fk" FOREIGN KEY ("requested_by_user_id") REFERENCES "public"."tbl_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_receipt_headers" ADD CONSTRAINT "tbl_receipt_headers_store_id_tbl_warehouses_warehouse_code_fk" FOREIGN KEY ("store_id") REFERENCES "public"."tbl_warehouses"("warehouse_code") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_receipt_lines" ADD CONSTRAINT "tbl_receipt_lines_receipt_id_tbl_receipt_headers_id_fk" FOREIGN KEY ("receipt_id") REFERENCES "public"."tbl_receipt_headers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tbl_receipt_lines" ADD CONSTRAINT "tbl_receipt_lines_item_id_tbl_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."tbl_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

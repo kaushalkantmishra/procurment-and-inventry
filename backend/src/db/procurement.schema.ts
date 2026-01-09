@@ -29,7 +29,9 @@ export const tblPurchaseRequests = pgTable("tbl_purchase_requests", {
   id: serial("id").primaryKey(),
 
   requesting_department: varchar("requesting_department", { length: 100 }),
-  requester_employee_code: varchar("requester_employee_code", { length: 50 }),
+  requested_by_user_id: uuid("requested_by_user_id")
+    .references(() => tblUsers.id)
+    .notNull(),
 
   date_of_request: timestamp("date_of_request").defaultNow(),
   required_date: date("required_date"),

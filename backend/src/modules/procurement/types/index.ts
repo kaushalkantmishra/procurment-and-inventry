@@ -10,8 +10,8 @@ import {
   tblVendorInvoices,
   tblInvoiceLines,
   tblThreeWayMatching,
-  tblDocumentStatusHistory
 } from '../../../db/procurement.schema';
+import { tblDocumentStatusHistory } from '../../../db/masters.schema';
 
 // Database model types
 export type PurchaseRequest = InferSelectModel<typeof tblPurchaseRequests>;
@@ -41,15 +41,15 @@ export type CreateDocumentStatusHistory = InferInsertModel<typeof tblDocumentSta
 // API Request types
 export interface CreatePurchaseRequestRequest {
   requesting_department?: string;
-  requester_employee_code?: string;
   required_date?: string;
   justification?: string;
   maintenance_work_order?: string;
+  lines: CreatePurchaseRequestLineRequest[];
+  attachments?: any[];
 }
 
 export interface UpdatePurchaseRequestRequest {
   requesting_department?: string;
-  requester_employee_code?: string;
   required_date?: string;
   justification?: string;
   maintenance_work_order?: string;

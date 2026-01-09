@@ -1,5 +1,5 @@
 {
-  "id": "e74fea3f-c93c-4342-a387-a67120645587",
+  "id": "4d1337d5-591f-46d5-991c-30bc7fde820a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2511,11 +2511,11 @@
           "primaryKey": false,
           "notNull": false
         },
-        "requester_employee_code": {
-          "name": "requester_employee_code",
-          "type": "varchar(50)",
+        "requested_by_user_id": {
+          "name": "requested_by_user_id",
+          "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "date_of_request": {
           "name": "date_of_request",
@@ -2578,7 +2578,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "tbl_purchase_requests_requested_by_user_id_tbl_users_id_fk": {
+          "name": "tbl_purchase_requests_requested_by_user_id_tbl_users_id_fk",
+          "tableFrom": "tbl_purchase_requests",
+          "tableTo": "tbl_users",
+          "columnsFrom": [
+            "requested_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
