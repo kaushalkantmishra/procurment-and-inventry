@@ -1,23 +1,23 @@
 import { db } from "../../../db";
-import { tblMaterialIssues, tblMaterialIssueLines, tblInventoryTransactions } from "../../../db/inventory.schema";
+import { tblMaterialIssueHeaders, tblMaterialIssueLines, tblInventoryTransactions } from "../../../db/inventory.schema";
 import { StockBalanceService } from "./stockBalance.service";
 import { eq, and } from "drizzle-orm";
 import { NUMBER_PREFIXES, ISSUE_STATUS, TRANSACTION_TYPES, ERROR_MESSAGES } from "../../../constants";
 
 export class MaterialIssueService {
   async getAll() {
-    return await db.select().from(tblMaterialIssues)
-      .where(eq(tblMaterialIssues.is_deleted, false));
+    return await db.select().from(tblMaterialIssueHeaders)
+      .where(eq(tblMaterialIssueHeaders.is_deleted, false));
   }
 
   async getById(id: number) {
-    const [issue] = await db.select().from(tblMaterialIssues)
-      .where(and(eq(tblMaterialIssues.id, id), eq(tblMaterialIssues.is_deleted, false)));
+    const [issue] = await db.select().from(tblMaterialIssueHeaders)
+      .where(and(eq(tblMaterialIssueHeaders.id, id), eq(tblMaterialIssueHeaders.is_deleted, false)));
     return issue;
   }
 
   async create(data: any) {
-    const [issue] = await db.insert(tblMaterialIssues).values({
+    const [issue] = await db.insert(tblMaterialIssueHeaders).values({
       issue_number: `${NUMBER_PREFIXES.MATERIAL_ISSUE}-${Date.now()}`,
       ...data
     }).returning();
@@ -71,9 +71,9 @@ export class MaterialIssueService {
         });
       }
 
-      const [updated] = await tx.update(tblMaterialIssues)
+      const [updated] = await tx.update(tblMaterialIssueHeaders)
         .set({ status: ISSUE_STATUS.ISSUED, updated_at: new Date() })
-        .where(eq(tblMaterialIssues.id, issueId))
+        .where(eq(tblMaterialIssueHeaders.id, issueId))
         .returning();
 
       return updated;
@@ -81,9 +81,9 @@ export class MaterialIssueService {
   }
 
   async delete(id: number) {
-    const [issue] = await db.update(tblMaterialIssues)
+    const [issue] = await db.update(tblMaterialIssueHeaders)
       .set({ is_deleted: true, deleted_at: new Date() })
-      .where(eq(tblMaterialIssues.id, id))
+      .where(eq(tblMaterialIssueHeaders.id, id))
       .returning();
     return issue;
   }

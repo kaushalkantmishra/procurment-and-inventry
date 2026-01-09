@@ -1,6 +1,7 @@
 import { db } from "../../../db/index";
 import { tblWarehouses } from "../../../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { CreateWarehouseRequest, UpdateWarehouseRequest } from '../types';
 
 export class WarehouseService {
   async getAllWarehouses() {
@@ -10,7 +11,7 @@ export class WarehouseService {
       .where(eq(tblWarehouses.is_deleted, false));
   }
 
-  async createWarehouse(warehouseData: any) {
+  async createWarehouse(warehouseData: CreateWarehouseRequest) {
     const [newWarehouse] = await db
       .insert(tblWarehouses)
       .values(warehouseData)
@@ -22,12 +23,12 @@ export class WarehouseService {
     const [warehouse] = await db
       .select()
       .from(tblWarehouses)
-      .where(eq(tblWarehouses.id, id));
+      .where(and(eq(tblWarehouses.id, id), eq(tblWarehouses.is_deleted, false)));
     if (!warehouse) throw new Error("Warehouse not found");
     return warehouse;
   }
 
-  async updateWarehouse(id: number, warehouseData: any) {
+  async updateWarehouse(id: number, warehouseData: UpdateWarehouseRequest) {
     const [updatedWarehouse] = await db
       .update(tblWarehouses)
       .set({ ...warehouseData, updated_at: new Date() })

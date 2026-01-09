@@ -1,12 +1,16 @@
 import { Router } from "express";
 import { DocumentAttachmentController } from "../controllers/documentAttachment.controller";
-import { upload } from "../../../utils/multer.util";
 
 const router = Router();
-const documentAttachmentController = new DocumentAttachmentController();
+const controller = new DocumentAttachmentController();
 
-router.post("/upload", upload.single('file'), documentAttachmentController.uploadAttachment);
-router.get("/", documentAttachmentController.getAttachments);
-router.delete("/:id", documentAttachmentController.deleteAttachment);
+// POST /api/attachments
+router.post('/', controller.create);
+
+// GET /api/attachments?documentType=PO&documentId=1
+router.get('/', controller.getByDocument);
+
+// DELETE /api/attachments/:id
+router.delete('/:id', controller.delete);
 
 export { router as documentAttachmentRoutes };

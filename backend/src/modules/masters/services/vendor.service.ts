@@ -1,6 +1,7 @@
 import { db } from "../../../db/index";
 import { tblVendors } from "../../../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { CreateVendorRequest, UpdateVendorRequest } from '../types';
 
 export class VendorService {
   async getAllVendors() {
@@ -10,7 +11,7 @@ export class VendorService {
       .where(eq(tblVendors.is_deleted, false));
   }
 
-  async createVendor(vendorData: any) {
+  async createVendor(vendorData: CreateVendorRequest) {
     const [newVendor] = await db
       .insert(tblVendors)
       .values(vendorData)
@@ -22,12 +23,12 @@ export class VendorService {
     const [vendor] = await db
       .select()
       .from(tblVendors)
-      .where(eq(tblVendors.id, id));
+      .where(and(eq(tblVendors.id, id), eq(tblVendors.is_deleted, false)));
     if (!vendor) throw new Error("Vendor not found");
     return vendor;
   }
 
-  async updateVendor(id: number, vendorData: any) {
+  async updateVendor(id: number, vendorData: UpdateVendorRequest) {
     const [updatedVendor] = await db
       .update(tblVendors)
       .set({ ...vendorData, updated_at: new Date() })

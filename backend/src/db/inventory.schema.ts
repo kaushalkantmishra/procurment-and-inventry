@@ -12,11 +12,18 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-// Import from masters for references
+/* ============================================================
+   MASTER REFERENCES
+   ============================================================ */
+
 import { tblCategories, tblUnits, tblWarehouses} from "./masters.schema";
 import { tblUsers } from "./auth.schema";
 
-// --- Product Master / Item Master ---
+/* ============================================================
+   PRODUCT MASTER / ITEM MASTER
+   Core product catalog and item information
+   ============================================================ */
+
 export const tblItems = pgTable("tbl_items", {
   id: serial("id").primaryKey(),
   sku: varchar("sku", { length: 20 }).notNull().unique(),
@@ -49,7 +56,11 @@ export const tblItems = pgTable("tbl_items", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- Inventory Transactions ---
+/* ============================================================
+   INVENTORY TRANSACTIONS
+   Stock movement tracking and audit trail
+   ============================================================ */
+
 export const tblInventoryTransactions = pgTable("tbl_inventory_transactions", {
   id: serial("id").primaryKey(),
   item_id: integer("item_id")
@@ -68,7 +79,29 @@ export const tblInventoryTransactions = pgTable("tbl_inventory_transactions", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- POS / Store Receipt ---
+/* ============================================================
+   STOCK BALANCES
+   Real-time inventory levels per warehouse
+   ============================================================ */
+
+export const tblStockBalances = pgTable("tbl_stock_balances", {
+  id: serial("id").primaryKey(),
+  item_id: integer("item_id").references(() => tblItems.id).notNull(),
+  warehouse_id: integer("warehouse_id").references(() => tblWarehouses.id).notNull(),
+  available_quantity: integer("available_quantity").default(0),
+  reserved_quantity: integer("reserved_quantity").default(0),
+  on_order_quantity: integer("on_order_quantity").default(0),
+  last_transaction_id: integer("last_transaction_id").references(() => tblInventoryTransactions.id),
+  last_updated: timestamp("last_updated").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+/* ============================================================
+   POS / STORE RECEIPTS
+   Point of sale transactions and customer receipts
+   ============================================================ */
+
 export const tblReceiptHeaders = pgTable("tbl_receipt_headers", {
   id: serial("id").primaryKey(),
   receipt_number: varchar("receipt_number", { length: 50 }).notNull().unique(),
@@ -138,22 +171,12 @@ export const tblPayments = pgTable("tbl_payments", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- Stock Balances ---
-export const tblStockBalances = pgTable("tbl_stock_balances", {
-  id: serial("id").primaryKey(),
-  item_id: integer("item_id").references(() => tblItems.id).notNull(),
-  warehouse_id: integer("warehouse_id").references(() => tblWarehouses.id).notNull(),
-  available_quantity: integer("available_quantity").default(0),
-  reserved_quantity: integer("reserved_quantity").default(0),
-  on_order_quantity: integer("on_order_quantity").default(0),
-  last_transaction_id: integer("last_transaction_id").references(() => tblInventoryTransactions.id),
-  last_updated: timestamp("last_updated").defaultNow().notNull(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
+/* ============================================================
+   MATERIAL ISSUES
+   Internal material transfers and issues
+   ============================================================ */
 
-// --- Material Issues ---
-export const tblMaterialIssues = pgTable("tbl_material_issues", {
+export const tblMaterialIssueHeaders = pgTable("tbl_material_issues", {
   id: serial("id").primaryKey(),
   issue_number: varchar("issue_number", { length: 50 }).notNull().unique(),
   issue_type: varchar("issue_type", { length: 20 }).notNull(),
@@ -174,7 +197,7 @@ export const tblMaterialIssues = pgTable("tbl_material_issues", {
 
 export const tblMaterialIssueLines = pgTable("tbl_material_issue_lines", {
   id: serial("id").primaryKey(),
-  issue_id: integer("issue_id").references(() => tblMaterialIssues.id).notNull(),
+  issue_id: integer("issue_id").references(() => tblMaterialIssueHeaders.id).notNull(),
   item_id: integer("item_id").references(() => tblItems.id).notNull(),
   requested_quantity: integer("requested_quantity").notNull(),
   issued_quantity: integer("issued_quantity").default(0),
@@ -186,6 +209,10 @@ export const tblMaterialIssueLines = pgTable("tbl_material_issue_lines", {
   deleted_at: timestamp("deleted_at"),
   is_deleted: boolean("is_deleted").default(false),
 });
+
+/* ============================================================
+   RELATIONS
+   ============================================================ */
 
 export const itemsRelations = relations(tblItems, ({ one }) => ({
   category: one(tblCategories, {

@@ -31,6 +31,7 @@ import { procurementDashboardRoutes } from '../modules/procurement/routes/procur
 // Extended Modules
 import { approvalWorkflowRoutes } from '../modules/masters/routes/approvalWorkflow.routes';
 import { documentAttachmentRoutes } from '../modules/masters/routes/documentAttachment.routes';
+import { documentStatusHistoryRoutes } from '../modules/masters/routes/documentStatusHistory.routes';
 import { stockBalanceRoutes } from '../modules/inventory/routes/stockBalance.routes';
 import { materialIssueRoutes } from '../modules/inventory/routes/materialIssue.routes';
 
@@ -71,6 +72,7 @@ router.use('/procurement/dashboard', procurementDashboardRoutes);
 // Extended Routes
 router.use('/approvals', approvalWorkflowRoutes);
 router.use('/attachments', documentAttachmentRoutes);
+router.use('/document-status-history', documentStatusHistoryRoutes);
 router.use('/stock-balances', stockBalanceRoutes);
 router.use('/material-issues', materialIssueRoutes);
 

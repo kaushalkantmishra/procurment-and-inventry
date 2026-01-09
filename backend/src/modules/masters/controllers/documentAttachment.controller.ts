@@ -4,51 +4,97 @@ import { ApiResponse } from "../../../utils/response.util";
 import { ErrorHandler } from "../../../utils/error.util";
 
 export class DocumentAttachmentController {
-  private documentAttachmentService: DocumentAttachmentService;
+  private service: DocumentAttachmentService;
 
   constructor() {
-    this.documentAttachmentService = new DocumentAttachmentService();
+    this.service = new DocumentAttachmentService();
   }
 
-  uploadAttachment = async (req: Request, res: Response) => {
-    try {
-      const file = req.file;
-      if (!file) {
-        return ApiResponse.badRequest(res, "No file uploaded");
-      }
-
-      const attachment = await this.documentAttachmentService.uploadAttachment(file, {
-        documentType: req.body.documentType,
-        documentId: parseInt(req.body.documentId),
-        uploadedBy: req.body.uploadedBy,
-      });
-
-      return ApiResponse.created(res, attachment, "File uploaded successfully");
-    } catch (error) {
-      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
-    }
-  };
-
-  getAttachments = async (req: Request, res: Response) => {
+  getByDocument = async (req: Request, res: Response) => {
     try {
       const { documentType, documentId } = req.query;
-      const attachments = await this.documentAttachmentService.getAttachments(
+
+      if (!documentType || !documentId) {
+        return ApiResponse.badRequest(
+          res,
+          "documentType and documentId query parameters are required",
+          "attachments-get",
+          req
+        );
+      }
+
+      const attachments = await this.service.getByDocument(
         documentType as string,
         parseInt(documentId as string)
       );
-      return ApiResponse.success(res, attachments, "Attachments retrieved successfully");
+
+      return ApiResponse.success(
+        res,
+        attachments,
+        "Attachments retrieved successfully",
+        200,
+        "attachments-get",
+        req
+      );
     } catch (error) {
-      return ApiResponse.error(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.error(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        500,
+        "attachments-get",
+        req
+      );
     }
   };
 
-  deleteAttachment = async (req: Request, res: Response) => {
+  create = async (req: Request, res: Response) => {
     try {
-      const attachmentId = parseInt(req.params.id);
-      await this.documentAttachmentService.deleteAttachment(attachmentId);
-      return ApiResponse.success(res, null, "Attachment deleted successfully");
+      const attachment = await this.service.create(req.body);
+      return ApiResponse.created(
+        res,
+        attachment,
+        "Attachment created successfully",
+        "attachments-create",
+        req
+      );
     } catch (error) {
-      return ApiResponse.badRequest(res, ErrorHandler.getErrorMessage(error));
+      return ApiResponse.badRequest(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        "attachments-create",
+        req
+      );
+    }
+  };
+
+  delete = async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const attachment = await this.service.delete(id);
+      return ApiResponse.success(
+        res,
+        attachment,
+        "Attachment deleted successfully",
+        200,
+        "attachments-delete",
+        req
+      );
+    } catch (error) {
+      if (ErrorHandler.getErrorMessage(error).includes("not found")) {
+        return ApiResponse.notFound(
+          res,
+          ErrorHandler.getErrorMessage(error),
+          "attachments-delete",
+          req
+        );
+      }
+      return ApiResponse.error(
+        res,
+        ErrorHandler.getErrorMessage(error),
+        500,
+        "attachments-delete",
+        req
+      );
     }
   };
 }

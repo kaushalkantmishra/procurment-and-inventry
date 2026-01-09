@@ -12,10 +12,18 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
+/* ============================================================
+   MASTER REFERENCES
+   ============================================================ */
+
 // Import users from auth schema
 import { tblUsers } from "./auth.schema";
 
-// --- Modules Schema ---
+/* ============================================================
+   MODULES SCHEMA
+   System modules and user permissions
+   ============================================================ */
+
 export const tblModules = pgTable("tbl_modules", {
   id: serial("id").primaryKey(),
   module_code: varchar("module_code", { length: 50 }).notNull().unique(),
@@ -31,7 +39,6 @@ export const tblModules = pgTable("tbl_modules", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- User Module Permissions ---
 export const tblUserModulePermissions = pgTable("tbl_user_module_permissions", {
   id: serial("id").primaryKey(),
   user_id: uuid("user_id").references(() => tblUsers.id).notNull(),
@@ -46,7 +53,11 @@ export const tblUserModulePermissions = pgTable("tbl_user_module_permissions", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- Unit of Measure Master ---
+/* ============================================================
+   UNIT OF MEASURE MASTER
+   Standard units for inventory and procurement
+   ============================================================ */
+
 export const tblUnits = pgTable("tbl_units", {
   id: serial("id").primaryKey(),
   unit_id: varchar("unit_id", { length: 20 }).notNull().unique(),
@@ -59,7 +70,11 @@ export const tblUnits = pgTable("tbl_units", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- Category Master ---
+/* ============================================================
+   CATEGORY MASTER
+   Product categorization hierarchy
+   ============================================================ */
+
 export const tblCategories = pgTable("tbl_categories", {
   id: serial("id").primaryKey(),
   category_name: varchar("category_name", { length: 100 }).notNull().unique(),
@@ -75,7 +90,11 @@ export const tblCategories = pgTable("tbl_categories", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- Warehouse Master ---
+/* ============================================================
+   WAREHOUSE MASTER
+   Storage locations and facilities
+   ============================================================ */
+
 export const tblWarehouses = pgTable("tbl_warehouses", {
   id: serial("id").primaryKey(),
   warehouse_code: varchar("warehouse_code", { length: 20 }).notNull().unique(),
@@ -92,7 +111,11 @@ export const tblWarehouses = pgTable("tbl_warehouses", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- Vendors ---
+/* ============================================================
+   VENDORS MASTER
+   Supplier and vendor information
+   ============================================================ */
+
 export const tblVendors = pgTable("tbl_vendors", {
   id: serial("id").primaryKey(),
   vendor_code: varchar("vendor_code", { length: 50 }).notNull().unique(),
@@ -112,7 +135,11 @@ export const tblVendors = pgTable("tbl_vendors", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- Approval Workflows ---
+/* ============================================================
+   APPROVAL WORKFLOWS
+   Document approval process management
+   ============================================================ */
+
 export const tblApprovalWorkflows = pgTable("tbl_approval_workflows", {
   id: serial("id").primaryKey(),
   workflow_code: varchar("workflow_code", { length: 50 }).notNull().unique(),
@@ -164,7 +191,11 @@ export const tblApprovalHistory = pgTable("tbl_approval_history", {
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-// --- System Tables ---
+/* ============================================================
+   SYSTEM TABLES
+   Configuration and audit functionality
+   ============================================================ */
+
 export const tblSystemEnums = pgTable("tbl_system_enums", {
   id: serial("id").primaryKey(),
   enum_type: varchar("enum_type", { length: 50 }).notNull(),
@@ -189,6 +220,12 @@ export const tblAuditLogs = pgTable("tbl_audit_logs", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
+
+/* ============================================================
+   DOCUMENT MANAGEMENT TABLES
+   Attachments and status tracking
+   ============================================================ */
+
 export const tblDocumentAttachments = pgTable("tbl_document_attachments", {
   id: serial("id").primaryKey(),
   document_type: varchar("document_type", { length: 50 }).notNull(),
@@ -205,6 +242,18 @@ export const tblDocumentAttachments = pgTable("tbl_document_attachments", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
+export const tblDocumentStatusHistory = pgTable("tbl_document_status_history", {
+  id: serial("id").primaryKey(),
+  document_type: varchar("document_type", { length: 20 }).notNull(),
+  document_id: integer("document_id").notNull(),
+  old_status: varchar("old_status", { length: 50 }),
+  new_status: varchar("new_status", { length: 50 }).notNull(),
+  changed_by: uuid("changed_by").references(() => tblUsers.id).notNull(),
+  changed_at: timestamp("changed_at").defaultNow().notNull(),
+  remarks: text("remarks"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const tblDocumentSequences = pgTable("tbl_document_sequences", {
   id: serial("id").primaryKey(),
   document_type: varchar("document_type", { length: 20 }).notNull().unique(),
@@ -214,7 +263,11 @@ export const tblDocumentSequences = pgTable("tbl_document_sequences", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
-export const categoriesRelations = relations(
+/* ============================================================
+   RELATIONS
+   ============================================================ */
+  
+   export const categoriesRelations = relations(
   tblCategories,
   ({ one, many }) => ({
     parent: one(tblCategories, {

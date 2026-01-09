@@ -1,5 +1,5 @@
 import { db } from '../../../db';
-import { tblDocumentStatusHistory } from '../../../db/procurement.schema';
+import { tblDocumentStatusHistory } from '../../../db/masters.schema';
 import { eq, and } from 'drizzle-orm';
 import { CreateDocumentStatusHistoryRequest } from '../types';
 

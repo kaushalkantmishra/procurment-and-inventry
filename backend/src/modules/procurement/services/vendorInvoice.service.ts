@@ -3,6 +3,18 @@ import { tblVendorInvoices, tblInvoiceLines, tblThreeWayMatching, tblPoLines, tb
 import { eq, and } from "drizzle-orm";
 import { CreateVendorInvoiceRequest, UpdateVendorInvoiceRequest } from '../types';
 
+// Constants
+const ERROR_MESSAGES = {
+  INVOICE_NOT_FOUND: 'Invoice not found'
+};
+
+const MATCH_STATUS = {
+  MATCHED: 'MATCHED',
+  VARIANCE: 'VARIANCE',
+  UNMATCHED: 'UNMATCHED',
+  PENDING: 'PENDING'
+};
+
 export class VendorInvoiceService {
   async getAll() {
     return await db.select().from(tblVendorInvoices)
@@ -18,7 +30,6 @@ export class VendorInvoiceService {
   async create(request: CreateVendorInvoiceRequest & { lines?: any[] }) {
     const {
       lines,
-      invoice_number,
       vendor_invoice_number,
       vendor_id,
       po_id,
@@ -31,12 +42,12 @@ export class VendorInvoiceService {
     } = request;
     
     const [invoice] = await db.insert(tblVendorInvoices).values({
-      invoice_number: invoice_number || `INV-${Date.now()}`,
+      invoice_number: `INV-${Date.now()}`,
       vendor_invoice_number,
       vendor_id,
       po_id,
-      invoice_date: new Date(invoice_date),
-      due_date: due_date ? new Date(due_date) : undefined,
+      invoice_date,
+      due_date,
       currency,
       subtotal,
       tax_amount,
@@ -121,8 +132,8 @@ export class VendorInvoiceService {
         vendor_invoice_number,
         vendor_id,
         po_id,
-        invoice_date: invoice_date ? new Date(invoice_date) : undefined,
-        due_date: due_date ? new Date(due_date) : undefined,
+        invoice_date: invoice_date ? invoice_date : undefined,
+        due_date: due_date ? due_date : null,
         currency,
         subtotal,
         tax_amount,

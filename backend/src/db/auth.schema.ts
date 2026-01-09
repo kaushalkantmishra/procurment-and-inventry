@@ -9,7 +9,11 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-// --- Roles Table ---
+/* ============================================================
+   ROLES TABLE
+   System roles and permissions management
+   ============================================================ */
+
 export const tblRoles = pgTable("tbl_roles", {
   id: serial("id").primaryKey(),
   role_code: varchar("role_code", { length: 50 }).notNull().unique(),
@@ -22,7 +26,11 @@ export const tblRoles = pgTable("tbl_roles", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- Users Table (Refactored) ---
+/* ============================================================
+   USERS TABLE
+   User accounts and authentication
+   ============================================================ */
+
 export const tblUsers = pgTable("tbl_users", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -36,7 +44,11 @@ export const tblUsers = pgTable("tbl_users", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- User-Role Mapping Table ---
+/* ============================================================
+   USER-ROLE MAPPING TABLE
+   Many-to-many relationship between users and roles
+   ============================================================ */
+
 export const tblUserRoles = pgTable("tbl_user_roles", {
   id: serial("id").primaryKey(),
   user_id: uuid("user_id").references(() => tblUsers.id).notNull(),
@@ -47,7 +59,10 @@ export const tblUserRoles = pgTable("tbl_user_roles", {
   is_deleted: boolean("is_deleted").default(false),
 });
 
-// --- Relations ---
+/* ============================================================
+   RELATIONS
+   ============================================================ */
+
 export const userRolesRelations = relations(tblUserRoles, ({ one }) => ({
   user: one(tblUsers, {
     fields: [tblUserRoles.user_id],

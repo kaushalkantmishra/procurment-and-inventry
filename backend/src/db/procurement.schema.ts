@@ -50,39 +50,36 @@ export const tblPurchaseRequests = pgTable("tbl_purchase_requests", {
    Line items – WHAT is being requested
    ============================================================ */
 
-export const tblPurchaseRequestLines = pgTable(
-  "tbl_purchase_request_lines",
-  {
-    id: serial("id").primaryKey(),
+export const tblPurchaseRequestLines = pgTable("tbl_purchase_request_lines", {
+  id: serial("id").primaryKey(),
 
-    pr_id: integer("pr_id")
-      .references(() => tblPurchaseRequests.id)
-      .notNull(),
+  pr_id: integer("pr_id")
+    .references(() => tblPurchaseRequests.id)
+    .notNull(),
 
-    item_id: integer("item_id")
-      .references(() => tblItems.id)
-      .notNull(),
+  item_id: integer("item_id")
+    .references(() => tblItems.id)
+    .notNull(),
 
-    quantity: integer("quantity").notNull(),
+  quantity: integer("quantity").notNull(),
 
-    estimated_unit_price: decimal("estimated_unit_price", {
-      precision: 15,
-      scale: 2,
-    }),
+  estimated_unit_price: decimal("estimated_unit_price", {
+    precision: 15,
+    scale: 2,
+  }),
 
-    line_total: decimal("line_total", {
-      precision: 15,
-      scale: 2,
-    }),
+  line_total: decimal("line_total", {
+    precision: 15,
+    scale: 2,
+  }),
 
-    status: varchar("status", { length: 20 }).default("ACTIVE"),
+  status: varchar("status", { length: 20 }).default("ACTIVE"),
 
-    created_at: timestamp("created_at").defaultNow().notNull(),
-    updated_at: timestamp("updated_at").defaultNow(),
-    deleted_at: timestamp("deleted_at"),
-    is_deleted: boolean("is_deleted").default(false),
-  }
-);
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
+  deleted_at: timestamp("deleted_at"),
+  is_deleted: boolean("is_deleted").default(false),
+});
 
 /* ============================================================
    PURCHASE ORDER (PO)
@@ -253,7 +250,9 @@ export const tblVendorInvoices = pgTable("tbl_vendor_invoices", {
   id: serial("id").primaryKey(),
 
   invoice_number: varchar("invoice_number", { length: 50 }).notNull().unique(),
-  vendor_invoice_number: varchar("vendor_invoice_number", { length: 50 }).notNull(),
+  vendor_invoice_number: varchar("vendor_invoice_number", {
+    length: 50,
+  }).notNull(),
 
   vendor_id: varchar("vendor_id", { length: 50 }).notNull(),
   po_id: integer("po_id").references(() => tblPurchaseOrders.id),
@@ -319,12 +318,17 @@ export const tblThreeWayMatching = pgTable("tbl_three_way_matching", {
     .notNull(),
 
   grn_detail_id: integer("grn_detail_id").references(() => tblGrnDetails.id),
-  invoice_line_id: integer("invoice_line_id").references(() => tblInvoiceLines.id),
+  invoice_line_id: integer("invoice_line_id").references(
+    () => tblInvoiceLines.id
+  ),
 
   match_status: varchar("match_status", { length: 20 }).default("PENDING"),
 
   quantity_variance: integer("quantity_variance").default(0),
-  price_variance: decimal("price_variance", { precision: 15, scale: 2 }).default("0"),
+  price_variance: decimal("price_variance", {
+    precision: 15,
+    scale: 2,
+  }).default("0"),
 
   variance_reason: text("variance_reason"),
 
@@ -333,28 +337,6 @@ export const tblThreeWayMatching = pgTable("tbl_three_way_matching", {
 
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow(),
-});
-
-/* ============================================================
-   DOCUMENT STATUS HISTORY
-   Audit trail for document status changes
-   ============================================================ */
-
-export const tblDocumentStatusHistory = pgTable("tbl_document_status_history", {
-  id: serial("id").primaryKey(),
-  
-  document_type: varchar("document_type", { length: 20 }).notNull(),
-  document_id: integer("document_id").notNull(),
-  
-  old_status: varchar("old_status", { length: 50 }),
-  new_status: varchar("new_status", { length: 50 }).notNull(),
-  
-  changed_by: uuid("changed_by").references(() => tblUsers.id).notNull(),
-  changed_at: timestamp("changed_at").defaultNow().notNull(),
-  
-  remarks: text("remarks"),
-  
-  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 /* ============================================================

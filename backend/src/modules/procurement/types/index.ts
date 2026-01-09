@@ -12,7 +12,6 @@ import {
   tblThreeWayMatching,
   tblDocumentStatusHistory
 } from '../../../db/procurement.schema';
-import { tblDocumentAttachments } from '../../../db/masters.schema';
 
 // Database model types
 export type PurchaseRequest = InferSelectModel<typeof tblPurchaseRequests>;
@@ -26,7 +25,6 @@ export type VendorInvoice = InferSelectModel<typeof tblVendorInvoices>;
 export type InvoiceLine = InferSelectModel<typeof tblInvoiceLines>;
 export type ThreeWayMatching = InferSelectModel<typeof tblThreeWayMatching>;
 export type DocumentStatusHistory = InferSelectModel<typeof tblDocumentStatusHistory>;
-export type DocumentAttachment = InferSelectModel<typeof tblDocumentAttachments>;
 
 // Insert types (for creating new records)
 export type CreatePurchaseRequest = InferInsertModel<typeof tblPurchaseRequests>;
@@ -39,7 +37,6 @@ export type CreateVendorInvoice = InferInsertModel<typeof tblVendorInvoices>;
 export type CreateInvoiceLine = InferInsertModel<typeof tblInvoiceLines>;
 export type CreateThreeWayMatching = InferInsertModel<typeof tblThreeWayMatching>;
 export type CreateDocumentStatusHistory = InferInsertModel<typeof tblDocumentStatusHistory>;
-export type CreateDocumentAttachment = InferInsertModel<typeof tblDocumentAttachments>;
 
 // API Request types
 export interface CreatePurchaseRequestRequest {
@@ -198,17 +195,6 @@ export interface UpdatePoLineRequest {
   unit_price?: string;
   line_total?: string;
   status?: number;
-}
-
-export interface CreateDocumentAttachmentRequest {
-  document_type: string;
-  document_id: number;
-  file_name: string;
-  original_name: string;
-  file_path: string;
-  file_size: number;
-  mime_type: string;
-  uploaded_by: string;
 }
 
 export interface CreateThreeWayMatchingRequest {

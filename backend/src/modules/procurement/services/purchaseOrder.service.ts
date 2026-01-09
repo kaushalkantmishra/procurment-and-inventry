@@ -1,7 +1,7 @@
 import { db } from "../../../db";
 import { tblPurchaseOrders, tblPoLines, tblPurchaseRequests, tblPurchaseRequestLines } from "../../../db/procurement.schema";
 import { eq, and } from "drizzle-orm";
-import { DocumentStatusHistoryService } from './documentStatusHistory.service';
+import { DocumentStatusHistoryService } from '../../masters/services/documentStatusHistory.service';
 import { 
   CreatePurchaseOrderRequest, 
   UpdatePurchaseOrderRequest, 

@@ -2,7 +2,30 @@ import { db } from "../../../db";
 import { tblApprovalWorkflows, tblApprovalLevels, tblApprovalInstances, tblApprovalHistory } from "../../../db/masters.schema";
 import { tblPurchaseOrders, tblPurchaseRequests, tblVendorInvoices } from "../../../db/procurement.schema";
 import { eq, and } from "drizzle-orm";
-import { DOCUMENT_TYPES, APPROVAL_ACTIONS, DOCUMENT_STATUS, ERROR_MESSAGES } from "../../../constants";
+import { CreateApprovalWorkflowRequest } from '../types';
+
+// Constants
+const DOCUMENT_TYPES = {
+  PURCHASE_ORDER: 'PO',
+  PURCHASE_REQUEST: 'PR',
+  INVOICE: 'INVOICE'
+};
+
+const APPROVAL_ACTIONS = {
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+};
+
+const DOCUMENT_STATUS = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+};
+
+const ERROR_MESSAGES = {
+  WORKFLOW_NOT_FOUND: 'Workflow not found',
+  APPROVAL_INSTANCE_NOT_FOUND: 'Approval instance not found'
+};
 
 export class ApprovalWorkflowService {
   async submitForApproval(data: {
@@ -93,7 +116,7 @@ export class ApprovalWorkflowService {
       .where(eq(tblApprovalWorkflows.is_deleted, false));
   }
 
-  async createWorkflow(data: any) {
+  async createWorkflow(data: CreateApprovalWorkflowRequest) {
     const [workflow] = await db.insert(tblApprovalWorkflows).values(data).returning();
     return workflow;
   }
