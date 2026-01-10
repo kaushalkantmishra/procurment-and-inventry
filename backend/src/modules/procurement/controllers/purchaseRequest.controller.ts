@@ -2,9 +2,14 @@ import { Request, Response } from "express";
 import { PurchaseRequestService } from "../services/purchaseRequest.service";
 import { ApiResponse } from "../../../utils/response.util";
 import { ErrorHandler } from "../../../utils/error.util";
+import { cloudinary } from "../../../utils/cloudinary.util";
+import multer from 'multer';
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 export class PurchaseRequestController {
   private purchaseRequestService: PurchaseRequestService;
+  public uploadMiddleware = upload.array('attachments', 10);
 
   constructor() {
     this.purchaseRequestService = new PurchaseRequestService();
@@ -67,8 +72,14 @@ export class PurchaseRequestController {
 
   create = async (req: Request, res: Response) => {
     try {
+      // Parse lines from JSON string if it's a string
+      let lines = req.body.lines;
+      if (typeof lines === 'string') {
+        lines = JSON.parse(lines);
+      }
+      
       // Validate request payload
-      if (!req.body.lines || !Array.isArray(req.body.lines) || req.body.lines.length === 0) {
+      if (!lines || !Array.isArray(lines) || lines.length === 0) {
         return ApiResponse.badRequest(
           res,
           "At least one PR line is required",
@@ -78,7 +89,7 @@ export class PurchaseRequestController {
       }
 
       // Validate each line
-      for (const line of req.body.lines) {
+      for (const line of lines) {
         if (!line.item_id || !line.quantity || line.quantity <= 0) {
           return ApiResponse.badRequest(
             res,
@@ -89,8 +100,52 @@ export class PurchaseRequestController {
         }
       }
 
+      // Handle file uploads if present
+      const attachments = [];
+      if (req.files && Array.isArray(req.files)) {
+        for (const file of req.files as Express.Multer.File[]) {
+          try {
+            const uploadResult = await new Promise((resolve, reject) => {
+              const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                  folder: 'pr-attachments',
+                  resource_type: 'auto',
+                  public_id: `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`
+                },
+                (error, result) => {
+                  if (error) {
+                    console.error('Cloudinary upload error:', error);
+                    reject(error);
+                  } else {
+                    resolve(result);
+                  }
+                }
+              );
+              uploadStream.end(file.buffer);
+            }) as any;
+
+            attachments.push({
+              file_name: uploadResult.public_id,
+              original_name: file.originalname,
+              file_path: uploadResult.secure_url,
+              file_size: file.size,
+              mime_type: file.mimetype
+            });
+          } catch (uploadError) {
+            console.error('Failed to upload file:', file.originalname, uploadError);
+            // Continue with other files instead of failing completely
+          }
+        }
+      }
+
+      const requestData = {
+        ...req.body,
+        lines,
+        attachments
+      };
+
       const purchaseRequest = await this.purchaseRequestService.create(
-        req.body,
+        requestData,
         req.user!.user_id
       );
       return ApiResponse.created(

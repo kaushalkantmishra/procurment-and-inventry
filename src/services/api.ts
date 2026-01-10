@@ -26,6 +26,15 @@ class ApiService {
     this.client.interceptors.response.use(
       (response) => response.data,
       (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('auth_token');
+          // Use dynamic import to avoid circular dependency
+          import('../store/authStore').then(({ useAuthStore }) => {
+            useAuthStore.getState().clearAuth();
+          });
+          window.location.hash = '#/';
+          return Promise.reject(new Error('Session expired. Please login again.'));
+        }
         const message = error.response?.data?.error || error.message || 'Request failed';
         throw new Error(message);
       }

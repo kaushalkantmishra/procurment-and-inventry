@@ -1,6 +1,7 @@
 import { db } from "../../../db/index";
 import { tblPurchaseRequests, tblPurchaseRequestLines } from '../../../db/procurement.schema';
 import { tblDocumentAttachments } from '../../../db/masters.schema';
+import { tblItems } from '../../../db/inventory.schema';
 import { eq, and } from "drizzle-orm";
 import { CreatePurchaseRequestRequest, UpdatePurchaseRequestRequest } from '../types';
 
@@ -22,7 +23,47 @@ export class PurchaseRequestService {
           eq(tblPurchaseRequests.is_deleted, false)
         )
       );
-    return pr;
+    
+    if (!pr) return null;
+
+    // Get PR lines with item details
+    const lines = await db
+      .select({
+        id: tblPurchaseRequestLines.id,
+        pr_id: tblPurchaseRequestLines.pr_id,
+        item_id: tblPurchaseRequestLines.item_id,
+        quantity: tblPurchaseRequestLines.quantity,
+        estimated_unit_price: tblPurchaseRequestLines.estimated_unit_price,
+        line_total: tblPurchaseRequestLines.line_total,
+        item_name: tblItems.item_name,
+        sku: tblItems.sku
+      })
+      .from(tblPurchaseRequestLines)
+      .leftJoin(tblItems, eq(tblPurchaseRequestLines.item_id, tblItems.id))
+      .where(
+        and(
+          eq(tblPurchaseRequestLines.pr_id, id),
+          eq(tblPurchaseRequestLines.is_deleted, false)
+        )
+      );
+
+    // Get attachments
+    const attachments = await db
+      .select()
+      .from(tblDocumentAttachments)
+      .where(
+        and(
+          eq(tblDocumentAttachments.document_type, 'PR'),
+          eq(tblDocumentAttachments.document_id, id),
+          eq(tblDocumentAttachments.is_deleted, false)
+        )
+      );
+
+    return {
+      ...pr,
+      lines,
+      attachments
+    };
   }
 
   async create(request: CreatePurchaseRequestRequest, userId: string) {
@@ -62,14 +103,14 @@ export class PurchaseRequestService {
         const prLines = [];
         for (const line of lines) {
           const lineTotal = line.estimated_unit_price 
-            ? (line.quantity * parseFloat(line.estimated_unit_price.toString()))
+            ? (line.quantity * parseFloat(line.estimated_unit_price))
             : null;
 
           const [prLine] = await tx.insert(tblPurchaseRequestLines).values({
             pr_id: pr.id,
             item_id: line.item_id,
             quantity: line.quantity,
-            estimated_unit_price: line.estimated_unit_price ? line.estimated_unit_price.toString() : null,
+            estimated_unit_price: line.estimated_unit_price || null,
             line_total: lineTotal ? lineTotal.toString() : null
           }).returning();
           

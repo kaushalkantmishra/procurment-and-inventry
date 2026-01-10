@@ -44,7 +44,16 @@ export class PurchaseRequestLineController {
 
   create = async (req: Request, res: Response) => {
     try {
-      const line = await this.service.create(req.body);
+      const prId = parseInt(req.body.pr_id);
+      if (!prId) {
+        return ApiResponse.badRequest(
+          res,
+          "pr_id is required",
+          "pr-lines-create",
+          req
+        );
+      }
+      const line = await this.service.create(prId, req.body);
       return ApiResponse.created(
         res,
         line,

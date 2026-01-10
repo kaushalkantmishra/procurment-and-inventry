@@ -57,10 +57,9 @@ export interface UpdatePurchaseRequestRequest {
 }
 
 export interface CreatePurchaseRequestLineRequest {
-  pr_id: number;
   item_id: number;
   quantity: number;
-  estimated_unit_price: string;
+  estimated_unit_price?: string;
 }
 
 export interface UpdatePurchaseRequestLineRequest {

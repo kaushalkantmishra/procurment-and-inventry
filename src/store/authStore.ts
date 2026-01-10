@@ -9,6 +9,7 @@ interface AuthState {
   modules: Module[];
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
+  clearAuth: () => void;
   loadUserModules: () => Promise<void>;
   initializeAuth: () => void;
 }
@@ -54,6 +55,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     await authService.logout();
+    set({
+      user: null,
+      isAuthenticated: false,
+      modules: []
+    });
+  },
+
+  clearAuth: () => {
+    localStorage.removeItem('auth_token');
     set({
       user: null,
       isAuthenticated: false,

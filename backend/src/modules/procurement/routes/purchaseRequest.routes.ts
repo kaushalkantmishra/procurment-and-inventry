@@ -7,7 +7,7 @@ const purchaseRequestController = new PurchaseRequestController();
 
 router.get("/", requireProcurement, purchaseRequestController.getAll);
 router.get("/:id", requireProcurement, purchaseRequestController.getById);
-router.post("/", requireProcurement, purchaseRequestController.create);
+router.post("/", requireProcurement, purchaseRequestController.uploadMiddleware, purchaseRequestController.create);
 router.put("/:id", requireProcurement, purchaseRequestController.update);
 router.delete("/:id", requireProcurement, purchaseRequestController.delete);
 

@@ -29,14 +29,14 @@ export class PurchaseRequestLineService {
     return line;
   }
 
-  async create(request: CreatePurchaseRequestLineRequest) {
-    const { pr_id, item_id, quantity, estimated_unit_price } = request;
+  async create(prId: number, request: CreatePurchaseRequestLineRequest) {
+    const { item_id, quantity, estimated_unit_price } = request;
     
     // Validate PR exists and status is Saved
     const [pr] = await db
       .select()
       .from(tblPurchaseRequests)
-      .where(eq(tblPurchaseRequests.id, pr_id));
+      .where(eq(tblPurchaseRequests.id, prId));
     
     if (!pr) {
       throw new Error('Purchase Request not found');
@@ -55,7 +55,7 @@ export class PurchaseRequestLineService {
     const lineTotal = quantity * parseFloat(estimated_unit_price || '0');
     
     const lineData = {
-      pr_id,
+      pr_id: prId,
       item_id,
       quantity,
       estimated_unit_price,
