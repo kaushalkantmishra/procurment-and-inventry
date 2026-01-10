@@ -26,6 +26,8 @@ export const PurchaseRequests: React.FC = () => {
   const [prLines, setPrLines] = useState<PRLine[]>([{ item_id: 0, quantity: 1, estimated_unit_price: '' }]);
   const [attachments, setAttachments] = useState<PRAttachment[]>([]);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'draft' | 'submitted'>('draft');
+  const [confirmSubmitPR, setConfirmSubmitPR] = useState<number | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -98,8 +100,19 @@ export const PurchaseRequests: React.FC = () => {
 
   const handleSubmitForApproval = async (id: number) => {
     try {
-      await apiService.updatePurchaseRequest(id, { status: 'Submitted' });
+      // Get current PR data to preserve existing fields
+      const currentPR = await apiService.getPurchaseRequestById(id);
+      const prData = currentPR.data || currentPR;
+      
+      await apiService.updatePurchaseRequest(id, { 
+        requesting_department: prData.requesting_department,
+        required_date: prData.required_date,
+        justification: prData.justification,
+        maintenance_work_order: prData.maintenance_work_order,
+        status: 'Submitted' 
+      });
       await fetchData();
+      setConfirmSubmitPR(null);
     } catch (error) {
       console.error('Failed to submit PR:', error);
     }
@@ -167,6 +180,14 @@ export const PurchaseRequests: React.FC = () => {
     }
   };
 
+  const filteredPurchaseRequests = purchaseRequests.filter(pr => {
+    if (activeTab === 'draft') {
+      return pr.status === 'Saved';
+    } else {
+      return pr.status !== 'Saved';
+    }
+  });
+
   const columns = [
     { key: 'id', header: 'PR ID', sortable: true },
     { key: 'requesting_department', header: 'Department', sortable: true },
@@ -200,7 +221,7 @@ export const PurchaseRequests: React.FC = () => {
               <Button size="sm" variant="ghost" onClick={() => { setEditingPR(pr); setIsModalOpen(true); }}>
                 <Edit size={16} />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => handleSubmitForApproval(pr.id)}>
+              <Button size="sm" variant="ghost" onClick={() => setConfirmSubmitPR(pr.id)}>
                 <Send size={16} />
               </Button>
               <Button size="sm" variant="ghost" onClick={() => handleDelete(pr.id)}>
@@ -230,15 +251,41 @@ export const PurchaseRequests: React.FC = () => {
         </Button>
       </div>
 
+      {/* Tabs */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('draft')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'draft'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            Draft ({purchaseRequests.filter(pr => pr.status === 'Saved').length})
+          </button>
+          <button
+            onClick={() => setActiveTab('submitted')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'submitted'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            Submitted ({purchaseRequests.filter(pr => pr.status !== 'Saved').length})
+          </button>
+        </nav>
+      </div>
+
       {loading ? (
         <div className="text-center py-8">
           <p className="text-gray-600 dark:text-gray-400">Loading purchase requests...</p>
         </div>
       ) : (
         <DataTable
-          data={purchaseRequests}
+          data={filteredPurchaseRequests}
           columns={columns}
-          searchPlaceholder="Search purchase requests..."
+          searchPlaceholder={`Search ${activeTab} purchase requests...`}
         />
       )}
 
@@ -547,6 +594,38 @@ export const PurchaseRequests: React.FC = () => {
               alt="Full size preview"
               className="max-w-full max-h-[80vh] object-contain"
             />
+          </div>
+        </Modal>
+      )}
+
+      {/* Submit Confirmation Modal */}
+      {confirmSubmitPR && (
+        <Modal
+          isOpen={!!confirmSubmitPR}
+          onClose={() => setConfirmSubmitPR(null)}
+          title="Submit Purchase Request"
+          size="md"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-600 dark:text-gray-400">
+              Are you sure you want to submit Purchase Request #{confirmSubmitPR} for approval?
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Once submitted, you will not be able to edit this request.
+            </p>
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button 
+                variant="secondary" 
+                onClick={() => setConfirmSubmitPR(null)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => handleSubmitForApproval(confirmSubmitPR)}
+              >
+                Submit for Approval
+              </Button>
+            </div>
           </div>
         </Modal>
       )}
