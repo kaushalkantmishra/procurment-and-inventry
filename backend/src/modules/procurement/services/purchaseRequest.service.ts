@@ -32,10 +32,13 @@ export class PurchaseRequestService {
         id: tblPurchaseRequestLines.id,
         pr_id: tblPurchaseRequestLines.pr_id,
         item_id: tblPurchaseRequestLines.item_id,
+        item_name: tblPurchaseRequestLines.item_name,
+        category_id: tblPurchaseRequestLines.category_id,
+        uom_id: tblPurchaseRequestLines.uom_id,
         quantity: tblPurchaseRequestLines.quantity,
         estimated_unit_price: tblPurchaseRequestLines.estimated_unit_price,
         line_total: tblPurchaseRequestLines.line_total,
-        item_name: tblItems.item_name,
+        existing_item_name: tblItems.item_name,
         sku: tblItems.sku
       })
       .from(tblPurchaseRequestLines)
@@ -72,6 +75,7 @@ export class PurchaseRequestService {
       required_date,
       justification,
       maintenance_work_order,
+      priority,
       lines,
       attachments
     } = request;
@@ -81,9 +85,19 @@ export class PurchaseRequestService {
       throw new Error('At least one PR line is required');
     }
 
+    if (priority && !['High', 'Medium', 'Low'].includes(priority)) {
+      throw new Error('Priority must be High, Medium, or Low');
+    }
+
     for (const line of lines) {
       if (!line.quantity || line.quantity <= 0) {
         throw new Error('Quantity must be greater than 0');
+      }
+      if (!line.item_id && !line.item_name) {
+        throw new Error('Either item_id or item_name is required');
+      }
+      if (!line.item_id && !line.uom_id) {
+        throw new Error('UOM is required for new items');
       }
     }
 
@@ -96,6 +110,7 @@ export class PurchaseRequestService {
           required_date: required_date || null,
           justification,
           maintenance_work_order: maintenance_work_order || null,
+          priority: priority || 'Medium',
           status: 'Saved'
         }).returning();
 
@@ -108,7 +123,10 @@ export class PurchaseRequestService {
 
           const [prLine] = await tx.insert(tblPurchaseRequestLines).values({
             pr_id: pr.id,
-            item_id: line.item_id,
+            item_id: line.item_id || null,
+            item_name: line.item_name || null,
+            category_id: line.category_id || null,
+            uom_id: line.uom_id || null,
             quantity: line.quantity,
             estimated_unit_price: line.estimated_unit_price || null,
             line_total: lineTotal ? lineTotal.toString() : null
@@ -157,8 +175,13 @@ export class PurchaseRequestService {
       required_date,
       justification,
       maintenance_work_order,
+      priority,
       status
     } = request;
+    
+    if (priority && !['High', 'Medium', 'Low'].includes(priority)) {
+      throw new Error('Priority must be High, Medium, or Low');
+    }
     
     const [pr] = await db
       .update(tblPurchaseRequests)
@@ -167,6 +190,7 @@ export class PurchaseRequestService {
         required_date: required_date || null,
         justification,
         maintenance_work_order: maintenance_work_order || null,
+        priority: priority || 'Medium',
         status,
         updated_at: new Date() 
       })

@@ -1,13 +1,23 @@
 import { db } from "../../../db/index";
 import { tblItems } from "../../../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, ilike } from "drizzle-orm";
 
 export class ItemService {
-  async getAllItems() {
+  async getAllItems(filters?: { categoryId?: number; search?: string }) {
+    const conditions = [eq(tblItems.is_deleted, false)];
+    
+    if (filters?.categoryId) {
+      conditions.push(eq(tblItems.category_id, filters.categoryId));
+    }
+    
+    if (filters?.search) {
+      conditions.push(ilike(tblItems.item_name, `%${filters.search}%`));
+    }
+
     return await db
       .select()
       .from(tblItems)
-      .where(eq(tblItems.is_deleted, false));
+      .where(and(...conditions));
   }
 
   async createItem(itemData: any) {

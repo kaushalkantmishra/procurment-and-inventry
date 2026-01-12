@@ -40,6 +40,7 @@ export const tblPurchaseRequests = pgTable("tbl_purchase_requests", {
   maintenance_work_order: varchar("maintenance_work_order", { length: 50 }),
 
   status: varchar("status", { length: 20 }).default("Saved"),
+  priority: varchar("priority", { length: 10 }).notNull().default("Medium"),
 
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow(),
@@ -60,9 +61,11 @@ export const tblPurchaseRequestLines = pgTable("tbl_purchase_request_lines", {
     .notNull(),
 
   item_id: integer("item_id")
-    .references(() => tblItems.id)
-    .notNull(),
+    .references(() => tblItems.id),
 
+  item_name: varchar("item_name", { length: 255 }),
+  category_id: integer("category_id"),
+  uom_id: integer("uom_id"),
   quantity: integer("quantity").notNull(),
 
   estimated_unit_price: decimal("estimated_unit_price", {

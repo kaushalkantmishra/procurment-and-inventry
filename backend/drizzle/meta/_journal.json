@@ -8,6 +8,13 @@
       "when": 1767961945840,
       "tag": "0000_damp_timeslip",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768212504866,
+      "tag": "0001_volatile_mephistopheles",
+      "breakpoints": true
     }
   ]
 }

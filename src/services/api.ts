@@ -46,8 +46,13 @@ class ApiService {
   }
 
   // Items API
-  async getItems() {
-    return this.request('/items');
+  async getItems(params?: { category_id?: number; search?: string }) {
+    const queryParams = new URLSearchParams();
+    if (params?.category_id) queryParams.append('category_id', params.category_id.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    
+    const queryString = queryParams.toString();
+    return this.request(`/items${queryString ? `?${queryString}` : ''}`);
   }
 
   async createItem(item: any) {

@@ -44,6 +44,7 @@ export interface CreatePurchaseRequestRequest {
   required_date?: string;
   justification?: string;
   maintenance_work_order?: string;
+  priority?: 'High' | 'Medium' | 'Low';
   lines: CreatePurchaseRequestLineRequest[];
   attachments?: any[];
 }
@@ -53,11 +54,15 @@ export interface UpdatePurchaseRequestRequest {
   required_date?: string;
   justification?: string;
   maintenance_work_order?: string;
+  priority?: 'High' | 'Medium' | 'Low';
   status?: string;
 }
 
 export interface CreatePurchaseRequestLineRequest {
-  item_id: number;
+  item_id?: number;
+  item_name?: string;
+  category_id?: number;
+  uom_id?: number;
   quantity: number;
   estimated_unit_price?: string;
 }

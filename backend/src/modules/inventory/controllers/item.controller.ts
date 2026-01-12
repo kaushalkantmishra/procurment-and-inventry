@@ -12,7 +12,11 @@ export class ItemController {
 
   getAll = async (req: Request, res: Response) => {
     try {
-      const items = await this.itemService.getAllItems();
+      const { category_id, search } = req.query;
+      const items = await this.itemService.getAllItems({
+        categoryId: category_id ? parseInt(category_id as string) : undefined,
+        search: search as string
+      });
       return ApiResponse.success(res, items, "Items retrieved successfully");
     } catch (error) {
       return ApiResponse.error(res, ErrorHandler.getErrorMessage(error));
